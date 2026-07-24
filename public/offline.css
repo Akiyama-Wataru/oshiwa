@@ -1,0 +1,72 @@
+:root {
+  color-scheme: light;
+  background: #fff8ed;
+  color: #2d2529;
+  font-family:
+    "Hiragino Maru Gothic ProN", "Hiragino Kaku Gothic ProN", "Yu Gothic",
+    "Meiryo", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  display: grid;
+  min-height: 100vh;
+  margin: 0;
+  place-items: center;
+  padding: 24px;
+}
+
+main {
+  max-width: 420px;
+  border: 2px solid #2d2529;
+  border-radius: 24px 24px 20px 8px;
+  background: #fffdf8;
+  padding: 36px;
+  box-shadow: 8px 9px 0 #2d2529;
+}
+
+strong {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border: 2px solid #2d2529;
+  border-radius: 17px 17px 17px 6px;
+  background: #f15f5a;
+  color: white;
+  font-size: 24px;
+}
+
+h1 {
+  margin: 24px 0 8px;
+  font-size: 27px;
+}
+
+p {
+  margin: 0;
+  color: #62575a;
+  line-height: 1.8;
+}
+
+button {
+  width: 100%;
+  margin-top: 24px;
+  border: 2px solid #2d2529;
+  border-radius: 13px 13px 13px 5px;
+  background: #f15f5a;
+  padding: 13px 16px;
+  color: #2d2529;
+  box-shadow: 4px 4px 0 #2d2529;
+  font: inherit;
+  font-weight: 700;
+}
+
+button:focus-visible {
+  border-radius: 4px;
+  outline: 3px solid #171217;
+  outline-offset: 4px;
+  box-shadow: 0 0 0 2px #fffdf8;
+}
