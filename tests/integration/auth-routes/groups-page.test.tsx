@@ -76,6 +76,31 @@ describe("GroupsPage", () => {
     expect(screen.getByRole("button", { name: "グループを作る" })).toBeEnabled();
   });
 
+  it("leads every member, not only managers, to that group's oshis", async () => {
+    mocks.createServerSupabaseClient.mockResolvedValue(
+      clientWithMemberships([
+        {
+          group_id: "2b75e8eb-4965-4dcf-9c39-4d6ad37fbefd",
+          role: "member",
+          groups: {
+            id: "2b75e8eb-4965-4dcf-9c39-4d6ad37fbefd",
+            name: "同担の輪",
+          },
+        },
+      ]),
+    );
+    const { default: GroupsPage } = await import("@/app/groups/page");
+
+    render(await GroupsPage());
+
+    expect(
+      screen.getByRole("link", { name: "同担の輪の推しを見る" }),
+    ).toHaveAttribute(
+      "href",
+      "/groups/2b75e8eb-4965-4dcf-9c39-4d6ad37fbefd/oshis",
+    );
+  });
+
   it("shows a useful empty state when the user has no memberships", async () => {
     mocks.createServerSupabaseClient.mockResolvedValue(
       clientWithMemberships([]),

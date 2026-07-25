@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { AuthBrand } from "@/app/components/auth/AuthBrand";
@@ -189,6 +190,12 @@ export default async function GroupsPage({
                   <p className="group-card-copy">
                     この輪の投稿や推しは、参加メンバーだけに公開されます。
                   </p>
+                  <Link
+                    className="group-card-link"
+                    href={`/groups/${membership.groupId}/oshis`}
+                  >
+                    {`${membership.groupName}の推しを見る`}
+                  </Link>
                   {canInvite ? (
                     <details className="group-invite-panel">
                       <summary>メンバーを招待</summary>

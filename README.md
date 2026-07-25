@@ -45,9 +45,21 @@ npm run test:e2e
 npm run test:all
 ```
 
+データベースの不変条件は、使い捨てのPostgreSQLクラスタを立ち上げて検証します。ローカルに`initdb` / `pg_ctl` / `psql`（PostgreSQL 16）が必要です。
+
+```bash
+./supabase/tests/run-auth-groups-smoke.sh
+```
+
+```bash
+./supabase/tests/run-oshis-smoke.sh
+```
+
 ## 現在の実装フェーズ
 
 - フェーズ1: 基盤、デザインシステム、PWA入口
-- フェーズ2以降: 招待制認証、グループ、推し、投稿、リアクション
+- フェーズ2: 招待制認証、グループ、権限、RLS
+- フェーズ3: 複数の推し、並び替え、メンバーカラー、画像とStorage RLS
+- フェーズ4以降: 投稿、タイムライン、リアクション、通知
 
 本番公開前に、SupabaseのAuth・Postgres・Storage設定とRLSを適用します。

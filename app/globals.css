@@ -1461,3 +1461,281 @@ summary:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  border: 0;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.button-danger {
+  border-color: var(--coral-strong);
+  background: var(--coral-soft);
+  box-shadow: 4px 4px 0 var(--coral-strong);
+  color: #6f1f25;
+}
+
+.button-danger:hover {
+  box-shadow: 6px 6px 0 var(--coral-strong);
+}
+
+.oshi-back-link,
+.group-card-link {
+  display: inline-block;
+  align-self: flex-start;
+  margin-top: 10px;
+  color: var(--coral-strong);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.oshi-create-form,
+.oshi-edit-form,
+.oshi-image-form,
+.oshi-delete-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+}
+
+.oshi-create-form label,
+.oshi-edit-form label,
+.oshi-image-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.oshi-create-form input[type="text"],
+.oshi-edit-form input[type="text"],
+.oshi-image-form input[type="file"] {
+  min-height: 48px;
+  border: 2px solid var(--control-border);
+  border-radius: 13px 13px 10px 4px;
+  background: var(--paper);
+  padding: 0 14px;
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.oshi-image-form input[type="file"] {
+  padding: 11px 14px;
+}
+
+/*
+ * Member colours live here rather than in a style attribute: the app is served
+ * with `style-src 'self'` and no `'unsafe-inline'`, so an inline style would be
+ * dropped. Each ink value is the better of black and white for that background,
+ * which keeps every chip at or above WCAG AA 4.5:1 (worst case below is 5.96:1).
+ */
+.oshi-color-1 { --oshi-color: #ff6f91; --oshi-ink: #000000; }
+.oshi-color-2 { --oshi-color: #ff9671; --oshi-ink: #000000; }
+.oshi-color-3 { --oshi-color: #ffc75f; --oshi-ink: #000000; }
+.oshi-color-4 { --oshi-color: #f9f871; --oshi-ink: #000000; }
+.oshi-color-5 { --oshi-color: #9bde7e; --oshi-ink: #000000; }
+.oshi-color-6 { --oshi-color: #4dd0b1; --oshi-ink: #000000; }
+.oshi-color-7 { --oshi-color: #59a5f5; --oshi-ink: #000000; }
+.oshi-color-8 { --oshi-color: #7d7bf0; --oshi-ink: #000000; }
+.oshi-color-9 { --oshi-color: #c874f0; --oshi-ink: #000000; }
+.oshi-color-10 { --oshi-color: #f06292; --oshi-ink: #000000; }
+.oshi-color-11 { --oshi-color: #8d99ae; --oshi-ink: #000000; }
+.oshi-color-12 { --oshi-color: #1d3557; --oshi-ink: #ffffff; }
+.oshi-color-fallback { --oshi-color: var(--cream); --oshi-ink: var(--ink); }
+
+.oshi-color-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.oshi-color-field legend {
+  padding: 0;
+}
+
+.oshi-color-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oshi-color-preset {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  border: 2px solid var(--control-border);
+  border-radius: 13px 13px 10px 4px;
+  background: var(--oshi-color);
+  padding: 0 12px;
+  color: var(--oshi-ink);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.oshi-color-preset:has(input:checked) {
+  border-color: var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.oshi-color-preset:has(input:focus-visible) {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.oshi-color-preset input {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--ink);
+}
+
+.oshi-board {
+  margin-top: 34px;
+}
+
+.oshi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oshi-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+  border: 2px solid var(--ink);
+  border-radius: 22px 22px 17px 6px;
+  background: var(--paper);
+  padding: 22px;
+  box-shadow: 6px 7px 0 var(--ink);
+}
+
+.oshi-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.oshi-board-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  border: 2px solid var(--ink);
+  border-radius: 99px;
+  background: var(--oshi-color);
+  padding: 0 15px;
+  color: var(--oshi-ink);
+  font-size: 15px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.oshi-order-controls {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.oshi-order-controls .button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  gap: 0;
+}
+
+.oshi-photo {
+  width: 100%;
+  height: auto;
+  border: 2px solid var(--ink);
+  border-radius: 17px 17px 13px 5px;
+  background: var(--cream);
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.oshi-photo-empty {
+  margin: 0;
+  border: 2px dashed var(--control-border);
+  border-radius: 17px 17px 13px 5px;
+  padding: 22px 14px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.oshi-manage-panel {
+  border-top: 1px solid rgba(45, 37, 41, 0.22);
+  padding-top: 14px;
+}
+
+.oshi-manage-panel > summary,
+.oshi-delete-panel > summary {
+  cursor: pointer;
+  color: var(--coral-strong);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.oshi-manage-panel[open] > summary {
+  margin-bottom: 16px;
+}
+
+.oshi-manage-panel .oshi-image-form,
+.oshi-manage-panel .oshi-delete-panel {
+  margin-top: 18px;
+  border-top: 1px solid rgba(45, 37, 41, 0.14);
+  padding-top: 16px;
+}
+
+.oshi-delete-form p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.oshi-reorder-form {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 22px 0 0;
+}
+
+@media (max-width: 720px) {
+  .oshi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .oshi-card-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .oshi-reorder-form .button {
+    width: 100%;
+  }
+}
