@@ -30,6 +30,28 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 
 `service_role` キーなどの管理者用秘密情報を `NEXT_PUBLIC_*` に設定しないでください。
 
+## Supabaseへの接続
+
+実データで確認するには、Supabaseプロジェクトを1つ用意します。ローカルスタック（`supabase start`）はDockerが必要なので、無料のクラウドプロジェクトを使うのが最短です。
+
+1. Supabaseでプロジェクトを作成します。
+2. スキーマを適用します。`supabase/migrations/` の2ファイルを**ファイル名の順に**実行します。
+
+   ```bash
+   supabase login && supabase link --project-ref <project-ref> && supabase db push
+   ```
+
+   CLIを使わない場合は、SQL Editorに次の順で貼り付けて実行しても同じです。
+
+   - `supabase/migrations/20260724000100_auth_groups.sql`
+   - `supabase/migrations/20260725000100_oshis_media.sql`
+
+3. `.env.local` に接続情報を書きます（`.env.example` が雛形です）。`SUPABASE_SECRET_KEY` はサーバー専用で、`NEXT_PUBLIC_*` には絶対に置きません。
+4. Authentication → URL Configuration の Redirect URLs に `http://localhost:3000/**` を追加します。招待メールの着地先がここに含まれていないと弾かれます。
+5. 最初のオーナーはアプリからは作れません（一般公開登録を提供しないため）。Authentication → Users → Add user で、メールアドレスを確認済みにした利用者を1人だけ作成します。以降のメンバーは、アプリの招待機能から追加します。
+
+無料プランのメール送信には上限があります。招待メールが届かない場合でも、招待作成後に表示される手動リンクを安全な方法で共有すれば参加できます。
+
 ## 品質チェック
 
 ```bash
