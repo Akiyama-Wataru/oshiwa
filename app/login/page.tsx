@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AuthBrand } from "@/app/components/auth/AuthBrand";
+import { LoginForm } from "@/app/components/auth/LoginForm";
+import { loginAction } from "@/app/login/actions";
+import { safeReturnTo } from "@/lib/auth/redirect";
+
 export const metadata: Metadata = {
   title: "ログイン | 推し輪",
   robots: {
@@ -9,16 +14,25 @@ export const metadata: Metadata = {
   },
 };
 
-export default function LoginPage() {
+type LoginPageProps = {
+  searchParams?: Promise<{
+    returnTo?: string | string[];
+    status?: string | string[];
+  }>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps = {}) {
+  const query = (await searchParams) ?? {};
+  const returnTo = safeReturnTo(
+    typeof query.returnTo === "string" ? query.returnTo : null,
+    "/groups",
+  );
+  const confirmationFailed = query.status === "confirmation-failed";
+
   return (
     <main className="auth-shell">
       <section className="auth-card" aria-labelledby="login-title">
-        <Link className="auth-brand" href="/" aria-label="推し輪のホームへ戻る">
-          <span className="brand-mark" aria-hidden="true">
-            推
-          </span>
-          <span>推し輪</span>
-        </Link>
+        <AuthBrand />
 
         <div className="auth-heading">
           <p className="eyebrow" lang="en">
@@ -28,33 +42,12 @@ export default function LoginPage() {
           <p>招待されたメールアドレスでログインします。</p>
         </div>
 
-        <form className="auth-form" aria-describedby="login-status">
-          <label>
-            メールアドレス
-            <input
-              type="email"
-              name="email"
-              autoComplete="email"
-              inputMode="email"
-              placeholder="you@example.com"
-            />
-          </label>
-          <label>
-            パスワード
-            <input
-              type="password"
-              name="password"
-              autoComplete="current-password"
-            />
-          </label>
-          <button className="button button-primary" type="submit" disabled>
-            ログインする
-          </button>
-        </form>
-
-        <p className="auth-status" id="login-status">
-          認証機能を安全に接続中です。フェーズ2で有効になります。
-        </p>
+        {confirmationFailed ? (
+          <p className="auth-status is-error" role="alert">
+            招待を確認できませんでした。管理者に招待の再発行を依頼してください。
+          </p>
+        ) : null}
+        <LoginForm action={loginAction} returnTo={returnTo} />
         <Link className="auth-text-link" href="/join">
           招待を受け取った方はこちら
         </Link>

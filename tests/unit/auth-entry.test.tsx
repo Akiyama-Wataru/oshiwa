@@ -1,12 +1,18 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
 
 import JoinPage from "@/app/join/page";
 import LoginPage from "@/app/login/page";
 
 describe("authentication entry pages", () => {
-  it("provides an email and password login form", () => {
-    render(<LoginPage />);
+  it("provides an enabled email and password login form without public signup", async () => {
+    render(
+      await LoginPage({
+        searchParams: Promise.resolve({ returnTo: "/groups" }),
+      }),
+    );
 
     expect(
       screen.getByRole("heading", { level: 1, name: "ログイン" }),
@@ -21,7 +27,8 @@ describe("authentication entry pages", () => {
     );
     expect(
       screen.getByRole("button", { name: "ログインする" }),
-    ).toBeDisabled();
+    ).toBeEnabled();
+    expect(screen.queryByRole("link", { name: /新規登録/ })).not.toBeInTheDocument();
     expect(screen.getByText("WELCOME BACK")).toHaveAttribute("lang", "en");
   });
 

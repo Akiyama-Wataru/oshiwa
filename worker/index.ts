@@ -18,24 +18,29 @@ interface ExecutionContext {
   passThroughOnException(): void;
 }
 
-const CONTENT_SECURITY_POLICY = [
+const FALLBACK_CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
   "base-uri 'self'",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+  "connect-src 'self'",
   "font-src 'self' data:",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  "img-src 'self' data: blob: https:",
+  "img-src 'self' data: blob:",
   "manifest-src 'self'",
   "object-src 'none'",
-  "script-src 'self' 'unsafe-inline'",
-  "style-src 'self' 'unsafe-inline'",
-  "worker-src 'self' blob:",
+  "script-src 'self'",
+  "style-src 'self'",
+  "worker-src 'self'",
 ].join("; ");
 
-function withSecurityHeaders(response: Response, request: Request): Response {
+export function withSecurityHeaders(response: Response, request: Request): Response {
   const headers = new Headers(response.headers);
-  headers.set("Content-Security-Policy", CONTENT_SECURITY_POLICY);
+  if (!headers.get("Content-Security-Policy")?.trim()) {
+    headers.set(
+      "Content-Security-Policy",
+      FALLBACK_CONTENT_SECURITY_POLICY,
+    );
+  }
   headers.set("Cross-Origin-Opener-Policy", "same-origin");
   headers.set("Cross-Origin-Resource-Policy", "same-origin");
   headers.set(

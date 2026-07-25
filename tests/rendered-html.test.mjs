@@ -1,6 +1,62 @@
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 import test from "node:test";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
+const exactSupabaseOrigin =
+  "https://exact-csp-project.supabase.co";
+const fakeSupabasePublishableKey = "sb_publishable_render_test";
+
+async function ensureConfiguredRenderedFixture() {
+  const serverEntry = new URL("../dist/server/index.js", import.meta.url);
+  let builtSource = "";
+
+  try {
+    builtSource = await readFile(serverEntry, "utf8");
+  } catch {
+    // The configured fixture is built below.
+  }
+
+  if (
+    !builtSource.includes(exactSupabaseOrigin) ||
+    !builtSource.includes(fakeSupabasePublishableKey)
+  ) {
+    await execFileAsync(
+      process.execPath,
+      [
+        fileURLToPath(
+          new URL(
+            "../node_modules/vinext/dist/cli.js",
+            import.meta.url,
+          ),
+        ),
+        "build",
+      ],
+      {
+        cwd: fileURLToPath(new URL("..", import.meta.url)),
+        env: {
+          ...process.env,
+          NEXT_PUBLIC_SUPABASE_URL: exactSupabaseOrigin,
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
+            fakeSupabasePublishableKey,
+          RENDER_TEST_SUPABASE_ORIGIN: exactSupabaseOrigin,
+          WRANGLER_LOG_PATH: ".wrangler/wrangler.log",
+        },
+        maxBuffer: 20 * 1024 * 1024,
+      },
+    );
+  }
+
+  process.env.NEXT_PUBLIC_SUPABASE_URL = exactSupabaseOrigin;
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY =
+    fakeSupabasePublishableKey;
+  process.env.RENDER_TEST_SUPABASE_ORIGIN = exactSupabaseOrigin;
+}
+
+await ensureConfiguredRenderedFixture();
 
 async function render(pathname = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
@@ -51,6 +107,69 @@ test("すべてのHTML応答へセキュリティヘッダーを付与する", a
     response.headers.get("permissions-policy") ?? "",
     /camera=\(\)/,
   );
+});
+
+test("本番HTMLのnonce CSPとインラインscript nonceを一致させる", async () => {
+  // vinext 0.0.50 inlines NEXT_PUBLIC_* during `vinext build`; supplying
+  // these values only to the subsequent Node test process is too late.
+  assert.equal(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    exactSupabaseOrigin,
+    "set the exact fake Supabase URL while building the rendered fixture",
+  );
+  assert.match(
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "",
+    /^sb_publishable_/,
+    "set a fake publishable key while building the rendered fixture",
+  );
+  const response = await render();
+  const csp = response.headers.get("content-security-policy") ?? "";
+
+  assert.doesNotMatch(csp, /'unsafe-inline'/);
+  assert.doesNotMatch(csp, /\*\.supabase\.co/);
+  assert.match(
+    csp,
+    new RegExp(
+      `connect-src[^;]*${exactSupabaseOrigin.replaceAll(".", "\\.")}`,
+    ),
+  );
+  assert.match(
+    csp,
+    new RegExp(
+      `connect-src[^;]*${exactSupabaseOrigin
+        .replace(/^https:/, "wss:")
+        .replaceAll(".", "\\.")}`,
+    ),
+  );
+
+  const nonce = csp.match(/script-src[^;]*'nonce-([^']+)'/)?.[1];
+  assert.ok(nonce, "proxy CSP must contain a per-request script nonce");
+  for (const headerName of response.headers.keys()) {
+    assert.doesNotMatch(headerName, /^x-middleware-/i);
+  }
+
+  const html = await response.text();
+  const inlineScripts = (html.match(/<script\b[^>]*>/gi) ?? []).filter(
+    (tag) => !/\bsrc\s*=/i.test(tag),
+  );
+  assert.ok(
+    inlineScripts.length > 0,
+    "rendered App Router HTML must contain inline bootstrap scripts",
+  );
+  for (const script of inlineScripts) {
+    assert.match(
+      script,
+      new RegExp(`\\bnonce=["']${nonce.replaceAll("-", "\\-")}["']`, "i"),
+      `inline script is missing the CSP nonce: ${script}`,
+    );
+  }
+
+  const nextResponse = await render();
+  const nextNonce = (
+    nextResponse.headers.get("content-security-policy") ?? ""
+  ).match(/script-src[^;]*'nonce-([^']+)'/)?.[1];
+  assert.ok(nextNonce);
+  assert.notEqual(nextNonce, nonce, "each request must receive a fresh nonce");
 });
 
 test("ログインと招待の入口をサーバーレンダリングする", async () => {

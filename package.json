@@ -13,7 +13,7 @@
     "test:all": "npm run test && npm run test:coverage && npm run typecheck && npm run test:rendered && npm run lint && npm run test:e2e",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:rendered": "npm run build && node --test tests/rendered-html.test.mjs",
+    "test:rendered": "NEXT_PUBLIC_SUPABASE_URL=https://exact-csp-project.supabase.co NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_render_test RENDER_TEST_SUPABASE_ORIGIN=https://exact-csp-project.supabase.co npm run build && NEXT_PUBLIC_SUPABASE_URL=https://exact-csp-project.supabase.co NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_render_test RENDER_TEST_SUPABASE_ORIGIN=https://exact-csp-project.supabase.co node --test tests/rendered-html.test.mjs",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next"
@@ -26,6 +26,7 @@
     "next": "^16.2.11",
     "react": "19.2.6",
     "react-dom": "19.2.6",
+    "server-only": "^0.0.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
