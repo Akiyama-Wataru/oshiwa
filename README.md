@@ -6,8 +6,10 @@
 
 ## 開発環境
 
-- Node.js `>=22.13.0`
+- Node.js `>=22.13.0`（`.nvmrc` に固定。`nvm use` で切り替えます）
 - npm
+
+Node.js 20 では `vinext` のビルドが失敗します。作業前に必ずバージョンを確認してください。
 
 ```bash
 cp .env.example .env.local

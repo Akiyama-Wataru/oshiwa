@@ -940,7 +940,9 @@ summary:focus-visible {
 }
 
 .auth-helper {
-  margin: -6px 0 0;
+  /* Clears the submit button's 5px offset shadow: a negative pull-up here
+     printed this line underneath the button. */
+  margin: 14px 0 0;
   color: var(--muted);
   font-size: 12px;
   line-height: 1.7;
@@ -1506,9 +1508,11 @@ summary:focus-visible {
   margin: 0;
 }
 
-.oshi-create-form label,
-.oshi-edit-form label,
-.oshi-image-form label {
+/* Direct children only: the colour swatches are labels too, and they lay their
+   radio and name out in a row. */
+.oshi-create-form > label,
+.oshi-edit-form > label,
+.oshi-image-form > label {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -1517,9 +1521,9 @@ summary:focus-visible {
   font-weight: 700;
 }
 
-.oshi-create-form input[type="text"],
-.oshi-edit-form input[type="text"],
-.oshi-image-form input[type="file"] {
+.oshi-create-form > label input[type="text"],
+.oshi-edit-form > label input[type="text"],
+.oshi-image-form > label input[type="file"] {
   min-height: 48px;
   border: 2px solid var(--control-border);
   border-radius: 13px 13px 10px 4px;
@@ -1529,7 +1533,7 @@ summary:focus-visible {
   font-size: 16px;
 }
 
-.oshi-image-form input[type="file"] {
+.oshi-image-form > label input[type="file"] {
   padding: 11px 14px;
 }
 
@@ -1581,7 +1585,9 @@ summary:focus-visible {
 .oshi-color-preset {
   display: inline-flex;
   align-items: center;
+  flex-direction: row;
   gap: 6px;
+  white-space: nowrap;
   min-height: 44px;
   border: 2px solid var(--control-border);
   border-radius: 13px 13px 10px 4px;

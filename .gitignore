@@ -47,3 +47,6 @@ next-env.d.ts
 
 # supabase cli
 /supabase/.temp
+
+# local editor launch config (machine specific paths)
+/.claude/launch.json
