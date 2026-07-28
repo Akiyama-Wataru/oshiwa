@@ -55,6 +55,20 @@ const IMAGE_REJECTION_MESSAGES: Record<ImageUploadRejection, string> = {
   "declared-mismatch": "画像はJPEG・PNG・WebPのみ登録できます。",
 };
 
+/**
+ * The messages returned to members are deliberately generic, so the cause has
+ * to be recorded somewhere. This writes the operation and the database or
+ * storage error, never the caller's data.
+ */
+function reportFailure(operation: string, cause: unknown): void {
+  const detail =
+    cause && typeof cause === "object" && "message" in cause
+      ? String((cause as { message: unknown }).message)
+      : String(cause);
+
+  console.error(`[oshis] ${operation} failed: ${detail}`);
+}
+
 type ClientResolution =
   | { ok: true; client: SupabaseClient }
   | { ok: false; message: string };
@@ -96,8 +110,13 @@ async function removeStorageObjects(paths: string[]): Promise<boolean> {
       .from(OSHI_IMAGE_BUCKET)
       .remove(paths);
 
+    if (error) {
+      reportFailure("storage.remove", error);
+    }
+
     return !error;
-  } catch {
+  } catch (cause) {
+    reportFailure("storage.remove", cause);
     return false;
   }
 }
@@ -129,6 +148,7 @@ export async function createOshiAction(
   });
 
   if (error) {
+    reportFailure("create_oshi", error);
     return { status: "error", message: CREATE_ERROR };
   }
 
@@ -165,6 +185,7 @@ export async function updateOshiAction(
   });
 
   if (error || data !== true) {
+    reportFailure("update_oshi", error ?? "refused");
     return { status: "error", message: UPDATE_ERROR };
   }
 
@@ -197,6 +218,7 @@ export async function deleteOshiAction(
   });
 
   if (error) {
+    reportFailure("delete_oshi", error);
     return { status: "error", message: DELETE_ERROR };
   }
 
@@ -235,6 +257,7 @@ export async function reorderOshisAction(
   });
 
   if (error) {
+    reportFailure("reorder_oshis", error);
     return { status: "error", message: REORDER_ERROR };
   }
 
@@ -298,6 +321,7 @@ export async function uploadOshiImageAction(
     });
 
   if (upload.error) {
+    reportFailure("storage.upload", upload.error);
     return { status: "error", message: IMAGE_ERROR };
   }
 
@@ -307,6 +331,7 @@ export async function uploadOshiImageAction(
   });
 
   if (error) {
+    reportFailure("set_oshi_image", error);
     // The row never referenced this object, so it must not survive the failure.
     await removeStorageObjects([objectPath]);
     return { status: "error", message: IMAGE_ERROR };

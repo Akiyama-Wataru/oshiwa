@@ -704,6 +704,42 @@ values
       || pg_catalog.repeat('e', 32) || '.webp'
   );
 
+-- storage policy privileges: PostgreSQL resolves the objects named in a row
+-- level security expression against the table's owner, and hosted Supabase
+-- gives storage.objects its own owner. If that role cannot reach the private
+-- helpers the policies call, every upload is refused with "permission denied
+-- for schema private" even though the policy logic itself is correct.
+do $assert$
+declare
+  helper text;
+begin
+  if not pg_catalog.has_schema_privilege(
+    'supabase_storage_admin',
+    'private',
+    'usage'
+  ) then
+    raise exception
+      'the storage owner cannot use the private schema';
+  end if;
+
+  foreach helper in array array[
+    'private.is_group_member(uuid)',
+    'private.has_group_role(uuid, public.membership_role[])',
+    'private.oshi_image_group_id(text)',
+    'private.oshi_image_oshi_id(text)',
+    'private.can_manage_oshi(uuid)'
+  ] loop
+    if not pg_catalog.has_function_privilege(
+      'supabase_storage_admin',
+      helper,
+      'execute'
+    ) then
+      raise exception 'the storage owner cannot execute %', helper;
+    end if;
+  end loop;
+end
+$assert$;
+
 -- storage cross-group: a member reads and writes only under their own group
 -- prefix, and a malformed object name is refused outright.
 set role authenticated;

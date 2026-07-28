@@ -6,6 +6,11 @@ const repositoryRoot = process.cwd();
 const supabaseRoot = join(repositoryRoot, "supabase");
 const migrationsRoot = join(supabaseRoot, "migrations");
 const invariantSqlPath = join(supabaseRoot, "tests", "oshis_rls.sql");
+const storagePrivilegeNames = existsSync(migrationsRoot)
+  ? readdirSync(migrationsRoot).filter((name) =>
+      /^\d+_storage_policy_privileges\.sql$/.test(name),
+    )
+  : [];
 const smokeScriptPath = join(supabaseRoot, "tests", "run-oshis-smoke.sh");
 
 const migrationNames = existsSync(migrationsRoot)
@@ -35,6 +40,12 @@ function extractSqlFunction(sql: string, qualifiedName: string) {
 }
 
 const migrationSql = readIfPresent(migrationPath);
+const storagePrivilegeSql = readIfPresent(
+  join(
+    migrationsRoot,
+    storagePrivilegeNames[0] ?? "missing_storage_policy_privileges.sql",
+  ),
+);
 const invariantSql = readIfPresent(invariantSqlPath);
 const smokeScript = readIfPresent(smokeScriptPath);
 
@@ -285,6 +296,39 @@ describe("Supabase oshi and media SQL contract", () => {
     );
   });
 
+  it("lets the owner of storage.objects reach the helpers its policies call", () => {
+    // Row level security expressions are resolved against the table's owner,
+    // and hosted Supabase gives storage.objects its own. Without these grants
+    // every upload fails with "permission denied for schema private".
+    expect(storagePrivilegeNames).toHaveLength(1);
+    expect(storagePrivilegeSql).toMatch(
+      /grant\s+usage\s+on\s+schema\s+private\s+to\s+supabase_storage_admin/i,
+    );
+
+    for (const helper of [
+      "private\\.is_group_member\\(uuid\\)",
+      "private\\.oshi_image_group_id\\(text\\)",
+      "private\\.oshi_image_oshi_id\\(text\\)",
+      "private\\.can_manage_oshi\\(uuid\\)",
+    ]) {
+      expect(storagePrivilegeSql).toMatch(
+        new RegExp(
+          `grant\\s+execute\\s+on\\s+function\\s+${helper}[\\s\\S]{0,80}to\\s+supabase_storage_admin`,
+          "i",
+        ),
+      );
+    }
+
+    // The grant must be skipped where that role does not exist, so the
+    // throwaway cluster the smoke script builds can still apply the migration.
+    expect(storagePrivilegeSql).toMatch(
+      /pg_catalog\.pg_roles[\s\S]*supabase_storage_admin/i,
+    );
+    expect(storagePrivilegeSql).not.toMatch(
+      /grant[^;]*on\s+all\s+functions\s+in\s+schema\s+private/i,
+    );
+  });
+
   it("includes executable invariants for the phase three pass conditions", () => {
     for (const invariant of [
       /set\s+role\s+anon/i,
@@ -300,6 +344,7 @@ describe("Supabase oshi and media SQL contract", () => {
       /member cannot reorder/i,
       /non-owner cannot delete/i,
       /orphan cleanup path/i,
+      /storage policy privileges/i,
       /storage cross-group/i,
       /storage object immutability/i,
       /\brollback\s*;/i,
@@ -312,6 +357,13 @@ describe("Supabase oshi and media SQL contract", () => {
     expect(smokeScript).toMatch(/pg_ctl/i);
     expect(smokeScript).toMatch(/auth_groups\.sql/i);
     expect(smokeScript).toMatch(/oshis_media\.sql/i);
+    expect(smokeScript).toMatch(/storage_policy_privileges\.sql/i);
+    // The harness has to mirror the hosted ownership of storage.objects,
+    // otherwise the privilege assertions above would have nothing to check.
+    expect(smokeScript).toMatch(/create\s+role\s+supabase_storage_admin/i);
+    expect(smokeScript).toMatch(
+      /alter\s+table\s+storage\.objects\s+owner\s+to\s+supabase_storage_admin/i,
+    );
     expect(smokeScript).toMatch(/oshis_rls\.sql/i);
     expect(smokeScript).toMatch(/trap\s+cleanup/i);
   });

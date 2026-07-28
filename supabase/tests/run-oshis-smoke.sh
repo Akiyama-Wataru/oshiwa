@@ -103,7 +103,12 @@ as $function$
   )::uuid
 $function$;
 
-create schema storage;
+-- Hosted Supabase gives the storage schema its own owner, and PostgreSQL
+-- evaluates row level security expressions with the table owner's privileges.
+-- Reproducing that ownership here is what makes the storage policies fail in
+-- this harness when they reach a schema their owner cannot see.
+create role supabase_storage_admin nologin;
+create schema storage authorization supabase_storage_admin;
 
 create table storage.buckets (
   id text primary key,
@@ -123,6 +128,9 @@ create table storage.objects (
   unique (bucket_id, name)
 );
 
+alter table storage.buckets owner to supabase_storage_admin;
+alter table storage.objects owner to supabase_storage_admin;
+
 grant usage on schema storage to anon, authenticated, service_role;
 grant select on storage.buckets to authenticated;
 grant select, insert, update, delete on storage.objects to authenticated;
@@ -132,6 +140,8 @@ psql "${psql_args[@]}" \
   -f "${repository_root}/supabase/migrations/20260724000100_auth_groups.sql"
 psql "${psql_args[@]}" \
   -f "${repository_root}/supabase/migrations/20260725000100_oshis_media.sql"
+psql "${psql_args[@]}" \
+  -f "${repository_root}/supabase/migrations/20260726000100_storage_policy_privileges.sql"
 
 storage_rls_enabled="$(
   psql "${psql_args[@]}" -qAt -c \
