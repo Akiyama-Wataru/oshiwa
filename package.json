@@ -45,6 +45,7 @@
     "@vitejs/plugin-react": "6.0.2",
     "@vitejs/plugin-rsc": "0.5.26",
     "@vitest/coverage-v8": "^4.1.10",
+    "axe-core": "^4.12.1",
     "eslint": "9.39.4",
     "eslint-config-next": "^16.2.11",
     "jsdom": "^29.1.1",
