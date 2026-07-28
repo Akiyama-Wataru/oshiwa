@@ -18,6 +18,14 @@ export const setPasswordSchema = z.object({
   password: passwordSchema,
 });
 
+export const resetRequestSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .pipe(z.email("有効なメールアドレスを入力してください。")),
+});
+
 export const inviteTokenSchema = z
   .string()
   .trim()

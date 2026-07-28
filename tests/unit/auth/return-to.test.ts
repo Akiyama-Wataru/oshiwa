@@ -57,6 +57,9 @@ describe("safeReturnTo", () => {
     "/auth",
     "/auth/callback?next=/groups",
     "/auth/confirm?token_hash=secret",
+    "/password",
+    "/password/reset",
+    "/password/update",
   ])("rejects an authentication redirect loop: %s", (value) => {
     expect(safeReturnTo(value, "/groups/fallback")).toBe("/groups/fallback");
   });

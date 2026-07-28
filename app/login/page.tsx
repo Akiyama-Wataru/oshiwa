@@ -48,6 +48,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps = {}) {
           </p>
         ) : null}
         <LoginForm action={loginAction} returnTo={returnTo} />
+        <Link className="auth-text-link" href="/password/reset">
+          パスワードをお忘れの方はこちら
+        </Link>
         <Link className="auth-text-link" href="/join">
           招待を受け取った方はこちら
         </Link>

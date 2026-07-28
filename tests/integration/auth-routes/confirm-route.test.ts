@@ -78,6 +78,50 @@ describe("GET /auth/confirm", () => {
     );
   });
 
+  it("verifies a recovery OTP and lands on the password form", async () => {
+    const verifyOtp = vi.fn().mockResolvedValue({ error: null });
+    createServerSupabaseClient.mockResolvedValue({ auth: { verifyOtp } });
+    const { GET } = await import("@/app/auth/confirm/route");
+    const tokenHash = "c".repeat(64);
+
+    const response = await GET(
+      new Request(
+        `https://oshiwa.test/auth/confirm?type=recovery&token_hash=${tokenHash}&next=%2Fgroups`,
+      ),
+    );
+
+    expect(verifyOtp).toHaveBeenCalledWith({
+      type: "recovery",
+      token_hash: tokenHash,
+    });
+    // The destination is fixed rather than read from `next`: a recovery link
+    // is only ever on its way to the form that sets the new password.
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(
+      "https://oshiwa.test/password/update",
+    );
+    expect(response.headers.get("cache-control")).toContain("no-store");
+  });
+
+  it("sends a failed recovery back to the reset form, not the login form", async () => {
+    createServerSupabaseClient.mockResolvedValue({
+      auth: {
+        verifyOtp: vi.fn().mockResolvedValue({ error: new Error("expired") }),
+      },
+    });
+    const { GET } = await import("@/app/auth/confirm/route");
+
+    const response = await GET(
+      new Request(
+        `https://oshiwa.test/auth/confirm?type=recovery&token_hash=${"d".repeat(64)}`,
+      ),
+    );
+
+    expect(response.headers.get("location")).toBe(
+      "https://oshiwa.test/password/reset?status=link-expired",
+    );
+  });
+
   it("rejects an invalid type or token without calling Supabase", async () => {
     const verifyOtp = vi.fn();
     createServerSupabaseClient.mockResolvedValue({ auth: { verifyOtp } });
