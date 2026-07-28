@@ -23,7 +23,7 @@ function renderForm(action: OshiAction) {
  * attached, and its FormData copy drops the file contents, so the submit event
  * is dispatched directly here. The real click and upload path is covered by
  * the browser end-to-end run, and the compression step by the unit tests for
- * lib/media/oshi-image-form-data.
+ * lib/media/image-form-data.
  */
 async function submitForm() {
   await act(async () => {

@@ -1757,3 +1757,277 @@ summary:focus-visible {
     width: 100%;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Timeline
+ *
+ * Member colours reach the chips through the same `--oshi-color` custom
+ * properties as the oshi board: the app is served with `style-src 'self'` and
+ * no `'unsafe-inline'`, so a per-post style attribute would be dropped.
+ * ------------------------------------------------------------------------ */
+
+.post-composer,
+.post-edit-form,
+.post-delete-form,
+.post-image-add-form,
+.post-image-delete-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+}
+
+.post-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.post-field input[type="text"],
+.post-field input[type="file"],
+.post-field select,
+.post-field textarea {
+  border: 2px solid var(--control-border);
+  border-radius: 13px 13px 10px 4px;
+  background: var(--paper);
+  padding: 11px 14px;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 16px;
+}
+
+.post-field input[type="text"],
+.post-field select {
+  min-height: 48px;
+  padding: 0 14px;
+}
+
+.post-field textarea {
+  min-height: 108px;
+  resize: vertical;
+}
+
+.post-field > label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.post-field-hint {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.post-oshi-picker {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  padding: 12px 14px;
+}
+
+.post-oshi-picker legend {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.post-oshi-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  border: 2px solid var(--ink);
+  border-radius: 99px;
+  background: var(--oshi-color);
+  padding: 0 14px;
+  color: var(--oshi-ink);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.post-oshi-option:has(input:focus-visible) {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.timeline-filters {
+  margin-top: 26px;
+  border-top: 1px solid rgba(45, 37, 41, 0.14);
+  padding-top: 18px;
+}
+
+.timeline-filter-form {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 10px 0 0;
+}
+
+.timeline-filter-reset {
+  color: var(--coral-strong);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.timeline-oshi-shortcuts,
+.post-oshi-list,
+.post-hashtag-list,
+.post-images,
+.post-image-actions,
+.post-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.post-list {
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.post-card {
+  border: 2px solid var(--line);
+  border-radius: 22px 22px 18px 6px;
+  background: var(--paper);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-soft);
+}
+
+.post-card-header {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.post-author {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.post-time,
+.post-edited {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.post-body {
+  /* The line breaks the member typed are part of what they wrote. */
+  margin: 12px 0 0;
+  font-size: 15px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.post-photo {
+  display: block;
+  width: 100%;
+  max-width: 260px;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  object-fit: cover;
+}
+
+.post-photo-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.post-oshi-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  border: 2px solid var(--ink);
+  border-radius: 99px;
+  background: var(--oshi-color);
+  padding: 0 15px;
+  color: var(--oshi-ink);
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.post-oshi-chip[aria-current="true"] {
+  box-shadow: 0 0 0 3px var(--focus);
+}
+
+.post-hashtag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  border: 2px solid var(--sky);
+  border-radius: 99px;
+  background: var(--sky-soft);
+  padding: 0 14px;
+  color: #17494a;
+  font-size: 13px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.post-manage-panel {
+  margin-top: 18px;
+  border-top: 1px solid rgba(45, 37, 41, 0.22);
+  padding-top: 14px;
+}
+
+.post-manage-panel > summary {
+  cursor: pointer;
+  color: var(--coral-strong);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.post-manage-panel[open] > summary {
+  margin-bottom: 16px;
+}
+
+.post-image-manager,
+.post-delete-form {
+  margin-top: 18px;
+  border-top: 1px solid rgba(45, 37, 41, 0.14);
+  padding-top: 16px;
+}
+
+.post-more-link {
+  display: inline-block;
+  margin-top: 20px;
+  border: 2px solid var(--control-border);
+  border-radius: 13px 13px 10px 4px;
+  background: var(--paper);
+  padding: 12px 18px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+@media (max-width: 720px) {
+  .timeline-filter-form .button,
+  .timeline-filter-form .post-field {
+    width: 100%;
+  }
+
+  .post-photo {
+    max-width: 100%;
+  }
+}
