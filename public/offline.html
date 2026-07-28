@@ -4,15 +4,21 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#f15f5a" />
-    <title>オフラインです | 推し輪</title>
+    <title>接続できませんでした | 推し輪</title>
     <link rel="stylesheet" href="/offline.css" />
     <script src="/offline.js" defer></script>
   </head>
   <body>
     <main>
       <strong aria-hidden="true">推</strong>
-      <h1>いまはオフラインです</h1>
-      <p>接続が戻ったら、もう一度ページを開いてください。</p>
+      <!-- Neither cause is claimed here: this page is shown whenever a page
+           could not be opened, and only the browser knows whether the device
+           lost its connection or the app could not be reached. The script
+           below names the cause once it can back it up. -->
+      <h1 id="offline-heading">ページを開けませんでした</h1>
+      <p id="offline-detail">
+        通信状況を確かめて、もう一度ためしてください。
+      </p>
       <button id="retry" type="button">もう一度ためす</button>
     </main>
   </body>
