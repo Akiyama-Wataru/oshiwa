@@ -1094,7 +1094,10 @@ revoke all on function public.list_group_posts(
   integer
 ) from public;
 
-create or replace function public.get_group_post(target_post_id uuid)
+create or replace function public.get_group_post(
+  target_post_id uuid,
+  target_group_id uuid
+)
 returns table (
   id uuid,
   body text,
@@ -1119,9 +1122,11 @@ set search_path = ''
 as $function$
   -- Security invoker like the timeline: a post in another circle is not
   -- refused, it simply is not there, so no answer confirms which ids exist.
+  -- The circle is named as well as the post, so a link that pairs a post with
+  -- the wrong circle finds nothing instead of answering under it.
   select *
   from private.post_timeline_rows(
-    null,
+    target_group_id,
     target_post_id,
     null,
     null,
@@ -1132,7 +1137,7 @@ as $function$
   )
 $function$;
 
-revoke all on function public.get_group_post(uuid) from public;
+revoke all on function public.get_group_post(uuid, uuid) from public;
 
 revoke all on table public.post_likes from public, anon, authenticated;
 revoke all on table public.post_replies from public, anon, authenticated;
@@ -1186,6 +1191,6 @@ grant execute on function public.list_group_posts(
   uuid,
   integer
 ) to authenticated;
-grant execute on function public.get_group_post(uuid) to authenticated;
+grant execute on function public.get_group_post(uuid, uuid) to authenticated;
 
 commit;

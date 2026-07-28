@@ -3,6 +3,10 @@ import Link from "next/link";
 import { PostDeleteForm } from "@/app/components/posts/PostDeleteForm";
 import { PostEditForm } from "@/app/components/posts/PostEditForm";
 import { PostImageManager } from "@/app/components/posts/PostImageManager";
+import {
+  type PostReactionActions,
+  PostReactions,
+} from "@/app/components/posts/PostReactions";
 import type { PostAction } from "@/app/groups/[groupId]/posts/actions";
 import { memberColorClassName } from "@/lib/oshis/member-color";
 import { formatPostTimestamp } from "@/lib/posts/format";
@@ -14,6 +18,7 @@ export type PostCardActions = {
   detach: PostAction;
   remove: PostAction;
   update: PostAction;
+  reactions: PostReactionActions;
 };
 
 export function PostCard({
@@ -99,6 +104,13 @@ export function PostCard({
           ))}
         </ul>
       ) : null}
+
+      <PostReactions
+        actions={actions.reactions}
+        basePath={basePath}
+        entry={entry}
+        groupId={groupId}
+      />
 
       {entry.canEdit || entry.canRemove ? (
         <details className="post-manage-panel">

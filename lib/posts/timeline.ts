@@ -3,6 +3,15 @@ import {
   signedUrlsByPath,
 } from "@/lib/media/signed-urls";
 import { normalizeMemberColor } from "@/lib/oshis/member-color";
+import {
+  type TimelineReply,
+  type TimelineShare,
+  UNKNOWN_MEMBER_NAME,
+  normalizeReplies,
+  normalizeShares,
+  readReactionCount,
+  readReactionFlag,
+} from "@/lib/posts/reactions";
 import { lowercaseUuid } from "@/lib/validation/identifiers";
 import { postImagePathSchema } from "@/lib/validation/posts";
 import { UNSAFE_DISPLAY_CHARACTER_PATTERN } from "@/lib/validation/text";
@@ -34,6 +43,14 @@ export type TimelineEntry = {
   hashtags: string[];
   canEdit: boolean;
   canRemove: boolean;
+  likeCount: number;
+  likedByViewer: boolean;
+  replies: TimelineReply[];
+  /** The whole thread, which can be longer than the replies carried here. */
+  replyCount: number;
+  shares: TimelineShare[];
+  shareCount: number;
+  sharedByViewer: boolean;
 };
 
 export type TimelineViewer = {
@@ -45,9 +62,6 @@ export type TimelineCursor = {
   createdAt: string;
   id: string;
 };
-
-/** Shown when the reader cannot resolve the author's profile row. */
-const UNKNOWN_AUTHOR = "メンバー";
 
 /** Applied when a row holds a colour outside the palette. */
 const FALLBACK_COLOR = "#8d99ae";
@@ -185,13 +199,20 @@ export function normalizeTimelineRows(
         authorName:
           typeof post.author_name === "string" && post.author_name.length > 0
             ? post.author_name
-            : UNKNOWN_AUTHOR,
+            : UNKNOWN_MEMBER_NAME,
         edited: updatedAt !== createdAt,
         images: normalizeImages(post.images),
         oshis: normalizeOshis(post.oshis),
         hashtags: normalizeHashtags(post.hashtags),
         canEdit,
         canRemove: canEdit || viewer.isManager,
+        likeCount: readReactionCount(post.like_count),
+        likedByViewer: readReactionFlag(post.liked_by_viewer),
+        replies: normalizeReplies(post.replies, viewer),
+        replyCount: readReactionCount(post.reply_count),
+        shares: normalizeShares(post.shares, viewer),
+        shareCount: readReactionCount(post.share_count),
+        sharedByViewer: readReactionFlag(post.shared_by_viewer),
       },
     ];
   });

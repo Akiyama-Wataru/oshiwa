@@ -16,6 +16,13 @@ import {
   detachPostImageAction,
   updatePostAction,
 } from "@/app/groups/[groupId]/posts/actions";
+import {
+  createReplyAction,
+  deleteReplyAction,
+  sharePostAction,
+  togglePostLikeAction,
+  unsharePostAction,
+} from "@/app/groups/[groupId]/posts/reactions";
 import { SupabaseConfigurationError } from "@/lib/env";
 import { POST_IMAGE_BUCKET } from "@/lib/posts/storage";
 import {
@@ -29,8 +36,12 @@ import {
   normalizeTimelineRows,
   nextTimelineCursor,
 } from "@/lib/posts/timeline";
+import {
+  type TimelineMembershipRole,
+  loadTimelineOshis,
+  readTimelineMembership,
+} from "@/lib/posts/timeline-context";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { normalizeOshiRows } from "@/lib/oshis/oshi-board";
 import {
   hashtagSchema,
   postGroupIdSchema,
@@ -47,11 +58,9 @@ export const metadata: Metadata = {
 /** Long enough to render the page, short enough to make a leaked URL useless. */
 const SIGNED_URL_TTL_SECONDS = 300;
 
-type MembershipRole = "owner" | "admin" | "member";
-
 type Timeline = {
   groupName: string;
-  role: MembershipRole;
+  role: TimelineMembershipRole;
   entries: TimelineEntry[];
   oshis: TimelineOshi[];
   nextCursor: string | null;
@@ -66,30 +75,6 @@ type TimelineSearch = {
   tag: string | null;
   cursor: TimelineCursor | null;
 };
-
-function readMembership(
-  value: unknown,
-): { role: MembershipRole; groupName: string } | null {
-  if (!value || typeof value !== "object") {
-    return null;
-  }
-
-  const membership = value as Record<string, unknown>;
-  const relation = Array.isArray(membership.groups)
-    ? membership.groups[0]
-    : membership.groups;
-  const group = (relation ?? {}) as Record<string, unknown>;
-  const role = membership.role;
-
-  if (
-    typeof group.name !== "string" ||
-    (role !== "owner" && role !== "admin" && role !== "member")
-  ) {
-    return null;
-  }
-
-  return { role, groupName: group.name };
-}
 
 /**
  * A filter that cannot be parsed is dropped rather than passed on: a rejected
@@ -111,28 +96,6 @@ function readSearch(params: Record<string, string | string[] | undefined>): Time
   };
 }
 
-async function loadOshis(
-  supabase: SupabaseClient,
-  groupId: string,
-  userId: string,
-): Promise<TimelineOshi[]> {
-  const { data, error } = await supabase
-    .from("oshis")
-    .select("id, name, member_color, image_path, created_by")
-    .eq("group_id", groupId)
-    .order("sort_order", { ascending: true });
-
-  if (error) {
-    return [];
-  }
-
-  return normalizeOshiRows(data, { userId, isManager: false }).map((oshi) => ({
-    id: oshi.id,
-    name: oshi.name,
-    color: oshi.color,
-  }));
-}
-
 async function loadTimeline(
   supabase: SupabaseClient,
   groupId: string,
@@ -152,13 +115,13 @@ async function loadTimeline(
     throw new TimelineUnavailableError("membership lookup failed");
   }
 
-  const membership = readMembership(membershipRow);
+  const membership = readTimelineMembership(membershipRow);
 
   if (!membership) {
     return null;
   }
 
-  const oshis = await loadOshis(supabase, groupId, userId);
+  const oshis = await loadTimelineOshis(supabase, groupId, userId);
   const { data: postRows, error: postsError } = await supabase.rpc(
     "list_group_posts",
     {
@@ -349,6 +312,13 @@ export default async function PostsPage({
               detach: detachPostImageAction,
               remove: deletePostAction,
               update: updatePostAction,
+              reactions: {
+                like: togglePostLikeAction,
+                reply: createReplyAction,
+                removeReply: deleteReplyAction,
+                share: sharePostAction,
+                unshare: unsharePostAction,
+              },
             }}
             activeOshiId={search.oshiId}
             activeTag={search.tag}

@@ -1013,7 +1013,8 @@ begin
 
   select * into entry
   from public.get_group_post(
-    pg_catalog.current_setting('test.post_a_id')::uuid
+    pg_catalog.current_setting('test.post_a_id')::uuid,
+    pg_catalog.current_setting('test.group_a_id')::uuid
   );
 
   if pg_catalog.jsonb_array_length(entry.replies) <> 5 then
@@ -1040,7 +1041,8 @@ begin
   select pg_catalog.count(*)
   into visible
   from public.get_group_post(
-    pg_catalog.current_setting('test.post_a_id')::uuid
+    pg_catalog.current_setting('test.post_a_id')::uuid,
+    pg_catalog.current_setting('test.group_a_id')::uuid
   );
 
   if visible <> 0 then

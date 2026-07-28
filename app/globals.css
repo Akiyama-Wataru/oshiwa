@@ -2124,3 +2124,250 @@ summary:focus-visible {
     width: 100%;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Reactions: likes, replies and sharing
+ * ------------------------------------------------------------------------ */
+
+.button-quiet {
+  min-height: 40px;
+  border-color: var(--control-border);
+  background: transparent;
+  padding: 0 16px;
+  color: #5a4e52;
+  font-size: 13px;
+}
+
+.button-quiet:hover {
+  border-color: var(--ink);
+  background: rgba(255, 253, 248, 0.78);
+}
+
+.post-reactions {
+  margin-top: 18px;
+  border-top: 1px solid rgba(45, 37, 41, 0.14);
+  padding-top: 16px;
+}
+
+.post-reaction-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px 18px;
+}
+
+.post-like-form,
+.post-share-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+
+.post-like-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  border: 2px solid var(--control-border);
+  border-radius: 99px;
+  background: var(--paper);
+  padding: 0 18px;
+  color: #5a4e52;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.post-like-button.is-liked {
+  border-color: var(--coral-strong);
+  background: var(--coral);
+  color: #251c20;
+}
+
+.post-share-panel > summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--coral-strong);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.post-share-panel[open] > summary {
+  margin-bottom: 12px;
+}
+
+.post-inline-status:empty {
+  display: none;
+}
+
+.post-inline-status {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.post-inline-status.is-error {
+  color: var(--coral-strong);
+}
+
+.post-share-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.post-share-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 13px;
+}
+
+.post-share-sharer {
+  font-weight: 700;
+}
+
+.post-share-note {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.post-reply-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.post-reply {
+  border-left: 3px solid var(--sky);
+  padding-left: 14px;
+}
+
+.post-reply-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+
+.post-reply-author {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.post-reply-body {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.7;
+  /* The line breaks a member typed are part of what they said. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.reply-delete-form {
+  margin: 8px 0 0;
+}
+
+.post-reply-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 18px 0 0;
+}
+
+/* ---------------------------------------------------------------------------
+ * Notifications
+ * ------------------------------------------------------------------------ */
+
+.notification-mark-read-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notification-card {
+  border: 2px solid var(--control-border);
+  border-radius: 18px 18px 18px 6px;
+  background: rgba(255, 253, 248, 0.78);
+}
+
+.notification-card.is-unread {
+  border-color: var(--coral-strong);
+  background: var(--paper);
+}
+
+.notification-link {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.notification-summary {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.notification-group {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.notification-excerpt,
+.notification-reply {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.notification-reply {
+  border-left: 3px solid var(--sky);
+  padding-left: 12px;
+  color: #17494a;
+}
+
+.notification-unread-badge {
+  align-self: flex-start;
+  border: 2px solid var(--coral-strong);
+  border-radius: 99px;
+  padding: 2px 12px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+@media (max-width: 720px) {
+  .post-like-form,
+  .post-share-panel,
+  .post-share-form .button,
+  .post-reply-form .button,
+  .notification-mark-read-form .button {
+    width: 100%;
+  }
+
+  .post-like-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
