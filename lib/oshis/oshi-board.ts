@@ -1,3 +1,7 @@
+import {
+  type SignedObject,
+  signedUrlsByPath,
+} from "@/lib/media/signed-urls";
 import { normalizeMemberColor } from "@/lib/oshis/member-color";
 import { oshiImagePathSchema } from "@/lib/validation/oshis";
 
@@ -10,11 +14,7 @@ export type OshiBoardEntry = {
   canManage: boolean;
 };
 
-export type SignedObject = {
-  path?: string | null;
-  signedUrl?: string | null;
-  error?: unknown;
-};
+export type { SignedObject };
 
 const FALLBACK_COLOR = "#8d99ae";
 
@@ -72,15 +72,7 @@ export function applySignedUrls(
   entries: readonly OshiBoardEntry[],
   signedObjects: readonly SignedObject[] | null | undefined,
 ): OshiBoardEntry[] {
-  const urlsByPath = new Map(
-    (signedObjects ?? []).flatMap((object) =>
-      !object.error &&
-      typeof object.path === "string" &&
-      typeof object.signedUrl === "string"
-        ? [[object.path, object.signedUrl] as const]
-        : [],
-    ),
-  );
+  const urlsByPath = signedUrlsByPath(signedObjects);
 
   return entries.map((entry) => ({
     ...entry,

@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 
-import { FormStatus } from "@/app/components/oshis/FormStatus";
+import { FormStatus } from "@/app/components/FormStatus";
 import { OshiDeleteForm } from "@/app/components/oshis/OshiDeleteForm";
 import { OshiEditForm } from "@/app/components/oshis/OshiEditForm";
 import { OshiImageForm } from "@/app/components/oshis/OshiImageForm";

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { compressOshiImage } from "@/lib/media/compress-oshi-image";
-import { withCompressedImage } from "@/lib/media/oshi-image-form-data";
+import { withCompressedImages } from "@/lib/media/image-form-data";
 
 const oshiId = "7c308427-3f5d-4cab-a54c-d9b2eecdd4b4";
 
@@ -17,7 +17,7 @@ function submission(image?: File) {
   return formData;
 }
 
-describe("withCompressedImage", () => {
+describe("withCompressedImages", () => {
   it("replaces the photo and keeps every other field", async () => {
     const original = new File([new Uint8Array(4096)], "IMG_0042_home.jpg", {
       type: "image/jpeg",
@@ -27,7 +27,7 @@ describe("withCompressedImage", () => {
     });
     const prepare = vi.fn(async () => compressed);
 
-    const prepared = await withCompressedImage(submission(original), prepare);
+    const prepared = await withCompressedImages(submission(original), prepare);
 
     expect(prepare).toHaveBeenCalledWith(original);
     expect(prepared.get("image")).toBe(compressed);
@@ -40,7 +40,7 @@ describe("withCompressedImage", () => {
     });
     const formData = submission(original);
 
-    await withCompressedImage(formData, async () =>
+    await withCompressedImages(formData, async () =>
       new File([new Uint8Array(1)], "b", { type: "image/webp" }),
     );
 
@@ -51,9 +51,9 @@ describe("withCompressedImage", () => {
     const prepare = vi.fn();
     const empty = new File([], "a.png", { type: "image/png" });
 
-    expect((await withCompressedImage(submission(), prepare)).get("image")).toBeNull();
+    expect((await withCompressedImages(submission(), prepare)).get("image")).toBeNull();
     expect(
-      ((await withCompressedImage(submission(empty), prepare)).get(
+      ((await withCompressedImages(submission(empty), prepare)).get(
         "image",
       ) as File).size,
     ).toBe(0);

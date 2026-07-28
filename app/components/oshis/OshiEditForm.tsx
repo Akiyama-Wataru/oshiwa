@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 
-import { FormStatus } from "@/app/components/oshis/FormStatus";
+import { FormStatus } from "@/app/components/FormStatus";
 import { MemberColorField } from "@/app/components/oshis/MemberColorField";
 import type {
   OshiAction,

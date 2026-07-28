@@ -1,4 +1,4 @@
-import type { OshiActionState } from "@/app/groups/[groupId]/oshis/actions";
+export type FormStatusLevel = "idle" | "success" | "warning" | "error";
 
 /**
  * One live region per form. The role stays `status` for the whole lifetime of
@@ -14,7 +14,7 @@ export function FormStatus({
 }: {
   id: string;
   message: string;
-  status: OshiActionState["status"];
+  status: FormStatusLevel;
 }) {
   return (
     <p
