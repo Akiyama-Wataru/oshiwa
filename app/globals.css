@@ -2031,3 +2031,96 @@ summary:focus-visible {
     max-width: 100%;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Members
+ * ------------------------------------------------------------------------ */
+
+.member-list,
+.invitation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.member-card,
+.invitation-card {
+  border: 2px solid var(--line);
+  border-radius: 20px 20px 16px 6px;
+  background: var(--paper);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-soft);
+}
+
+.member-card-heading,
+.invitation-card-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.member-name,
+.invitation-email {
+  font-size: 15px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.member-self {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.member-role-form,
+.member-remove-form,
+.member-leave-form,
+.invitation-revoke-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 16px 0 0;
+}
+
+.member-remove-form,
+.invitation-revoke-form {
+  border-top: 1px solid rgba(45, 37, 41, 0.14);
+  padding-top: 14px;
+}
+
+.invitation-section {
+  margin-top: 28px;
+  border-top: 1px solid rgba(45, 37, 41, 0.14);
+  padding-top: 18px;
+}
+
+.member-leave-panel {
+  margin-top: 28px;
+  border-top: 1px solid rgba(45, 37, 41, 0.22);
+  padding-top: 14px;
+}
+
+.member-leave-panel > summary {
+  cursor: pointer;
+  color: var(--coral-strong);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.member-leave-form p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+@media (max-width: 720px) {
+  .member-role-form .button,
+  .member-remove-form .button,
+  .invitation-revoke-form .button {
+    width: 100%;
+  }
+}

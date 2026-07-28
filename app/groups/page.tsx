@@ -202,6 +202,12 @@ export default async function GroupsPage({
                   >
                     {`${membership.groupName}の推しを見る`}
                   </Link>
+                  <Link
+                    className="group-card-link"
+                    href={`/groups/${membership.groupId}/members`}
+                  >
+                    {`${membership.groupName}のメンバーを見る`}
+                  </Link>
                   {canInvite ? (
                     <details className="group-invite-panel">
                       <summary>メンバーを招待</summary>
