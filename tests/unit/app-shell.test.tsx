@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import type { ReactElement } from "react";
-import { render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { isValidElement } from "react";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next/font/google", () => ({
   Geist: () => ({ variable: "font-geist-sans" }),
   Geist_Mono: () => ({ variable: "font-geist-mono" }),
 }));
 
+import { ServiceWorkerRegistration } from "@/app/components/ServiceWorkerRegistration";
 import RootLayout, { metadata } from "@/app/layout";
 import Home, * as homeModule from "@/app/page";
 
@@ -80,26 +82,32 @@ describe("accessible app shell", () => {
 });
 
 describe("service worker registration", () => {
-  const originalServiceWorker = navigator.serviceWorker;
+  function carries(node: React.ReactNode, type: unknown): boolean {
+    if (Array.isArray(node)) {
+      return node.some((child) => carries(child, type));
+    }
 
-  afterEach(() => {
-    Object.defineProperty(navigator, "serviceWorker", {
-      configurable: true,
-      value: originalServiceWorker,
-    });
-  });
+    if (!isValidElement(node)) {
+      return false;
+    }
 
-  it("registers the static-shell worker when the browser supports it", async () => {
-    const register = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(navigator, "serviceWorker", {
-      configurable: true,
-      value: { register },
-    });
+    return (
+      node.type === type ||
+      carries(
+        (node.props as { children?: React.ReactNode }).children,
+        type,
+      )
+    );
+  }
 
-    render(<Home />);
-
-    await waitFor(() => {
-      expect(register).toHaveBeenCalledWith("/sw.js");
-    });
+  it("registers the worker from the layout, not from one screen", () => {
+    // Every page shares the layout, so a member who opens the app at their
+    // circle gets a worker too. The registration's own behaviour is covered by
+    // tests/unit/service-worker-registration.test.tsx, and by the browser
+    // suite for what jsdom cannot show.
+    expect(
+      carries(RootLayout({ children: null }), ServiceWorkerRegistration),
+    ).toBe(true);
+    expect(carries(<Home />, ServiceWorkerRegistration)).toBe(false);
   });
 });

@@ -73,6 +73,12 @@ summary:focus-visible {
 .landing-shell {
   position: relative;
   isolation: isolate;
+  /* The decorations behind the phone deliberately run past the edge. On a
+     narrow screen that spill became a horizontal scroll of the whole page, so
+     it is cut at the edge instead. `clip` where it is understood, because
+     `hidden` would make this a scroll container. */
+  overflow-x: hidden;
+  overflow-x: clip;
   min-height: 100vh;
 }
 
@@ -1473,6 +1479,14 @@ summary:focus-visible {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  /* Shortening the transition only makes the movement instant. The lift under
+     a finger or a cursor is decoration as much as the animations are, and
+     somebody who asked for less motion asked to be spared this too. */
+  .button:hover,
+  .feature-card:hover {
+    transform: none;
   }
 }
 

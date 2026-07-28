@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 
+import { ServiceWorkerRegistration } from "@/app/components/ServiceWorkerRegistration";
+
 import "./globals.css";
 
 const description =
@@ -42,7 +44,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body>{children}</body>
+      <body>
+        {children}
+        {/* Registered from the layout rather than from the landing screen: a
+            member who opens the app at their circle would otherwise never
+            register a worker, and would meet the browser's own error page
+            instead of ours when something could not be reached. */}
+        <ServiceWorkerRegistration />
+      </body>
     </html>
   );
 }
