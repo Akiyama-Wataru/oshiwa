@@ -1,0 +1,59 @@
+name: CI
+
+# The whole suite, on the same command a developer runs locally. Anything that
+# only CI knows how to run is a step that stops being trusted the moment it
+# fails, so this file adds environment rather than test logic.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push to the same branch makes the older run irrelevant.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # .nvmrc is the single source of truth: Node 20 fails this project with a
+      # SyntaxError from vinext that looks unrelated to the version.
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # Only the browser the Playwright projects actually use.
+      - run: npx playwright install --with-deps chromium
+
+      # The SQL smoke stands up its own throwaway cluster with initdb and
+      # pg_ctl, which Ubuntu installs outside PATH.
+      - name: Put the PostgreSQL server binaries on PATH
+        run: |
+          bindir="/usr/lib/postgresql/$(ls /usr/lib/postgresql | sort -V | tail -1)/bin"
+          if [ ! -x "${bindir}/initdb" ]; then
+            echo "No PostgreSQL server binaries under ${bindir}" >&2
+            exit 1
+          fi
+          echo "${bindir}" >> "$GITHUB_PATH"
+
+      - run: npm run test:all
+
+      # Traces and screenshots are the only way to read a browser failure that
+      # cannot be reproduced from the log alone.
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-artifacts
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+          if-no-files-found: ignore

@@ -23,7 +23,12 @@ export LC_ALL="${utf8_locale}"
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repository_root="$(cd "${script_dir}/../.." && pwd)"
-cluster_root="$(mktemp -d /private/tmp/oshiwa-posts.XXXXXX)"
+# The cleanup below deletes this tree, so the prefix it has to match is
+# written once and reused rather than repeated as a literal. TMPDIR keeps
+# it portable: /private/tmp exists on macOS but not on a Linux runner.
+temporary_root="${TMPDIR:-/tmp}"
+cluster_prefix="${temporary_root%/}/oshiwa-posts."
+cluster_root="$(mktemp -d "${cluster_prefix}XXXXXX")"
 data_dir="${cluster_root}/data"
 socket_dir="${cluster_root}/socket"
 server_log="${cluster_root}/postgres.log"
@@ -40,7 +45,7 @@ cleanup() {
   fi
 
   case "${cluster_root}" in
-    /private/tmp/oshiwa-posts.*)
+    "${cluster_prefix}"*)
       rm -rf -- "${cluster_root}"
       ;;
     *)
@@ -164,6 +169,11 @@ psql "${psql_args[@]}" \
   -f "${repository_root}/supabase/migrations/20260727000100_posts_timeline.sql"
 psql "${psql_args[@]}" \
   -f "${repository_root}/supabase/migrations/20260728000100_posts_timeline_read.sql"
+
+# The same script the operator runs against the hosted project, so it cannot
+# rot into passing on a schema that no longer matches the migrations.
+psql "${psql_args[@]}" \
+  -f "${repository_root}/supabase/verify-posts-schema.sql"
 
 psql "${psql_args[@]}" \
   -f "${repository_root}/supabase/tests/posts_rls.sql"
