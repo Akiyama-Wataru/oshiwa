@@ -8,6 +8,17 @@ const workerPath = resolve(process.cwd(), "public/sw.js");
 
 type WorkerListener = (event: Record<string, unknown>) => void;
 
+async function currentCacheName() {
+  const source = await readFile(workerPath, "utf8");
+  const named = /const CACHE_NAME = "([^"]+)"/u.exec(source);
+
+  if (!named) {
+    throw new Error("the service worker no longer names its cache");
+  }
+
+  return named[1];
+}
+
 async function loadServiceWorker(existingCacheNames: string[] = []) {
   const source = await readFile(workerPath, "utf8");
   const listeners = new Map<string, WorkerListener>();
@@ -134,9 +145,13 @@ describe("static-shell service worker", () => {
   });
 
   it("deletes only obsolete cache entries owned by 推し輪", async () => {
+    // Read from the worker rather than written out here: the name changes with
+    // every shell correction, and a test that has to be edited alongside it
+    // would only ever be edited to agree.
+    const cacheName = await currentCacheName();
     const { caches, listeners } = await loadServiceWorker([
       "oshiwa-shell-v0",
-      "oshiwa-shell-v1",
+      cacheName,
       "unrelated-draft-cache",
     ]);
     const activate = listeners.get("activate");

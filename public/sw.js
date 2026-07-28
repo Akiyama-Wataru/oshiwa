@@ -1,4 +1,7 @@
-const CACHE_NAME = "oshiwa-shell-v1";
+// Bumped whenever a shell file changes: an installed worker keeps serving
+// what it cached under the old name, so the name is how a correction
+// actually reaches a device that has already been here.
+const CACHE_NAME = "oshiwa-shell-v2";
 const APP_SHELL = [
   "/offline.html",
   "/offline.css",
