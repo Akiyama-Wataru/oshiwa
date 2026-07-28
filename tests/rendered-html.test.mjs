@@ -226,3 +226,87 @@ test("固定したsharpでPWA画像を安全に変換できる", async () => {
   assert.equal(info.height, 32);
   assert.equal(info.format, "png");
 });
+
+test("ブラウザへ配るファイルにサーバー専用の秘密を混ぜない", async () => {
+  const { readdir } = await import("node:fs/promises");
+  const clientRoot = fileURLToPath(new URL("../dist/client", import.meta.url));
+
+  async function filesUnder(directory) {
+    const entries = await readdir(directory, { withFileTypes: true });
+    const found = [];
+
+    for (const entry of entries) {
+      const path = `${directory}/${entry.name}`;
+      found.push(...(entry.isDirectory() ? await filesUnder(path) : [path]));
+    }
+
+    return found;
+  }
+
+  // Anything that reaches this directory reaches every visitor's device. The
+  // secret key, the service role and the cookie signing material are named
+  // here so that a future import from the wrong module fails the suite rather
+  // than shipping.
+  const forbidden = [
+    "SUPABASE_SECRET_KEY",
+    "sb_secret_",
+    "service_role",
+    "SUPABASE_SERVICE_ROLE",
+  ];
+  const offenders = [];
+
+  for (const path of await filesUnder(clientRoot)) {
+    const contents = await readFile(path, "utf8").catch(() => "");
+
+    for (const secret of forbidden) {
+      if (contents.includes(secret)) {
+        offenders.push(`${path.slice(clientRoot.length + 1)}: ${secret}`);
+      }
+    }
+  }
+
+  assert.deepEqual(offenders, []);
+});
+
+test("リポジトリに鍵らしきものを置き去りにしない", async () => {
+  const { stdout } = await execFileAsync("git", ["ls-files", "-z"], {
+    cwd: fileURLToPath(new URL("..", import.meta.url)),
+    maxBuffer: 20 * 1024 * 1024,
+  });
+  const tracked = stdout.split("\0").filter(Boolean);
+
+  // The repository is public. A key that reaches a commit is disclosed even if
+  // the next commit removes it, so this looks at what is tracked rather than at
+  // what is in the working tree.
+  const patterns = [
+    /sb_secret_[A-Za-z0-9_-]{10,}/,
+    /eyJhbGciOi[A-Za-z0-9_-]{20,}/,
+    /-----BEGIN (?:RSA |EC )?PRIVATE KEY-----/,
+    /SUPABASE_SECRET_KEY\s*=\s*["']?\S{10,}/,
+  ];
+  const offenders = [];
+
+  for (const path of tracked) {
+    if (path.startsWith("dist/") || path.startsWith("public/icons/")) {
+      continue;
+    }
+
+    const contents = await readFile(
+      fileURLToPath(new URL(`../${path}`, import.meta.url)),
+      "utf8",
+    ).catch(() => "");
+
+    for (const pattern of patterns) {
+      const found = pattern.exec(contents);
+
+      // .env.example has to show the shape of each value, so a match is only a
+      // leak when it does not read as a placeholder. A real key pasted there
+      // would not say "your-".
+      if (found && !/your-|example|placeholder|changeme|<[^>]+>/iu.test(found[0])) {
+        offenders.push(`${path}: ${found[0].slice(0, 12)}…`);
+      }
+    }
+  }
+
+  assert.deepEqual(offenders, []);
+});
