@@ -1,5 +1,6 @@
 "use client";
 
+import { FormStatus } from "@/app/components/FormStatus";
 import { useActionFormState } from "@/app/components/useActionFormState";
 import type {
   LoginAction,
@@ -75,16 +76,16 @@ export function LoginForm({
       <p className="auth-helper" id="login-help">
         アカウントはグループ管理者からの招待でのみ作成できます。
       </p>
-      <p
-        className={`auth-status ${state.status === "error" ? "is-error" : ""}`}
+      <FormStatus
+        className="auth-status"
         id="login-status"
-        aria-live="polite"
-        role={state.status === "error" ? "alert" : "status"}
-      >
-        {isPending
-          ? "ログインしています…"
-          : state.message || "招待されたメールアドレスでログインしてください。"}
-      </p>
+        message={
+          isPending
+            ? "ログインしています…"
+            : state.message || "招待されたメールアドレスでログインしてください。"
+        }
+        status={state.status}
+      />
     </>
   );
 }

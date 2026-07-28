@@ -23,7 +23,7 @@ describe("group forms", () => {
     expect(screen.getByRole("button", { name: "グループを作る" })).toBeEnabled();
   });
 
-  it("offers only member/admin roles and an aria-live result for invitations", () => {
+  it("offers only member/admin roles and one live region for invitations", () => {
     render(
       <InviteMemberForm
         action={vi.fn() as unknown as InviteMemberAction}
@@ -41,8 +41,11 @@ describe("group forms", () => {
     expect(screen.queryByRole("option", { name: "オーナー" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("権限")).toBeEnabled();
     expect(screen.getByTestId("invite-status")).toHaveAttribute(
+      "role",
+      "status",
+    );
+    expect(screen.getByTestId("invite-status")).not.toHaveAttribute(
       "aria-live",
-      "polite",
     );
   });
 });

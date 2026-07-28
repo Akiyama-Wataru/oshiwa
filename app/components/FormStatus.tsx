@@ -8,17 +8,19 @@ export type FormStatusLevel = "idle" | "success" | "warning" | "error";
  * `aria-live` is set alongside it.
  */
 export function FormStatus({
+  className = "auth-inline-status",
   id,
   message,
   status,
 }: {
-  id: string;
+  className?: string;
+  id?: string;
   message: string;
   status: FormStatusLevel;
 }) {
   return (
     <p
-      className={`auth-inline-status ${status === "error" ? "is-error" : ""}`}
+      className={`${className} ${status === "error" ? "is-error" : ""}`}
       id={id}
       role="status"
     >

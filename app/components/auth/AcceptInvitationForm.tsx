@@ -1,5 +1,6 @@
 "use client";
 
+import { FormStatus } from "@/app/components/FormStatus";
 import { useActionFormState } from "@/app/components/useActionFormState";
 import type { JoinAction, JoinActionState } from "@/app/join/[token]/actions";
 
@@ -41,14 +42,12 @@ export function AcceptInvitationForm({
       >
         {isPending ? "参加処理中" : "この招待に参加する"}
       </button>
-      <p
-        className={`auth-status ${state.status === "error" ? "is-error" : ""}`}
+      <FormStatus
+        className="auth-status"
         id="join-status"
-        aria-live="polite"
-        role={state.status === "error" ? "alert" : "status"}
-      >
-        {isPending ? "招待を確認しています…" : state.message}
-      </p>
+        message={isPending ? "招待を確認しています…" : state.message}
+        status={state.status}
+      />
     </form>
   );
 }

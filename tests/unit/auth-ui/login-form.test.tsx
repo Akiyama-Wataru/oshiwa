@@ -40,10 +40,13 @@ describe("LoginForm", () => {
     await user.type(screen.getByLabelText("パスワード"), "correct horse battery");
     await user.click(screen.getByRole("button", { name: "ログインする" }));
 
-    expect(await screen.findByText("ログインしています…")).toHaveAttribute(
-      "aria-live",
-      "polite",
-    );
+    const pending = await screen.findByText("ログインしています…");
+
+    // `role="status"` already implies a polite live region; pairing it with
+    // aria-live adds nothing, and pairing aria-live="polite" with an `alert`
+    // would quietly demote the very message that needed announcing.
+    expect(pending).toHaveAttribute("role", "status");
+    expect(pending).not.toHaveAttribute("aria-live");
     expect(screen.getByRole("button", { name: "ログイン中" })).toBeDisabled();
 
     await act(async () => {
@@ -70,6 +73,30 @@ describe("LoginForm", () => {
       await screen.findByText(
         "メールアドレスまたはパスワードを確認してください。",
       ),
-    ).toHaveAttribute("role", "alert");
+    ).toHaveAttribute("role", "status");
+  });
+
+  it("keeps one live region registered while the message changes", async () => {
+    const action = vi.fn(async () => ({
+      status: "error" as const,
+      message: "メールアドレスまたはパスワードを確認してください。",
+    })) as LoginAction;
+    const user = userEvent.setup();
+
+    render(<LoginForm action={action} returnTo="/groups" />);
+    const region = screen.getByRole("status");
+
+    await user.type(screen.getByLabelText("メールアドレス"), "fan@example.com");
+    await user.type(screen.getByLabelText("パスワード"), "wrong password");
+    await user.click(screen.getByRole("button", { name: "ログインする" }));
+
+    // Swapping the role between `status` and `alert` re-registers the region in
+    // several screen readers, which drops the message it was meant to announce.
+    // The same element, with the same role, has to carry every message.
+    expect(await screen.findByRole("status")).toBe(region);
+    expect(region).toHaveTextContent(
+      "メールアドレスまたはパスワードを確認してください。",
+    );
+    expect(region).toHaveClass("is-error");
   });
 });
