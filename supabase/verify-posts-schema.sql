@@ -149,3 +149,9 @@ begin
   raise notice 'phase 4 schema verification: PASS';
 end
 $verify$;
+
+-- The Supabase SQL editor does not show notices, and a do block returns no
+-- rows, so on its own the check above is indistinguishable from having run
+-- nothing at all. This returns the verdict as a row that the editor will
+-- actually display. Reaching it at all means every assertion above held.
+select 'phase 4 schema verification: PASS' as result;
