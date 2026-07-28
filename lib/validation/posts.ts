@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import type { SupportedImageExtension } from "@/lib/media/image-signature";
 import {
+  createObjectId,
   lowercaseUuid,
   scopedObjectPathPattern,
 } from "@/lib/validation/identifiers";
@@ -85,6 +86,19 @@ export const postImagePathSchema = z
   .string()
   .regex(scopedObjectPathPattern(), "画像の保存先が不正です。");
 
+/**
+ * Hashtags are typed as one line, the way they are written in a caption. The
+ * separators cover the ones a Japanese keyboard produces without a mode
+ * switch, so a member never has to notice which comma they used.
+ */
+export function splitHashtagInput(value: unknown): string[] {
+  if (typeof value !== "string") {
+    return [];
+  }
+
+  return value.split(/[\s,、，]+/u).filter((part) => part.length > 0);
+}
+
 export const createPostSchema = z.object({
   groupId: postGroupIdSchema,
   body: postBodySchema,
@@ -116,6 +130,8 @@ export function buildPostImagePath(input: {
     `${groupId}/${postId}/${input.randomId}.${input.extension}`,
   );
 }
+
+export const createPostImageId = createObjectId;
 
 export type CreatePostInput = z.infer<typeof createPostSchema>;
 export type UpdatePostInput = z.infer<typeof updatePostSchema>;

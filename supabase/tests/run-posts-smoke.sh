@@ -162,8 +162,12 @@ fi
 
 psql "${psql_args[@]}" \
   -f "${repository_root}/supabase/migrations/20260727000100_posts_timeline.sql"
+psql "${psql_args[@]}" \
+  -f "${repository_root}/supabase/migrations/20260728000100_posts_timeline_read.sql"
 
 psql "${psql_args[@]}" \
   -f "${repository_root}/supabase/tests/posts_rls.sql"
+psql "${psql_args[@]}" \
+  -f "${repository_root}/supabase/tests/posts_timeline.sql"
 
 echo "post/timeline migration smoke and invariants: PASS"

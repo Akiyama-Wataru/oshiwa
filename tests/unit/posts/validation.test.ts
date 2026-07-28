@@ -9,6 +9,7 @@ import {
   createPostSchema,
   deletePostSchema,
   postImagePathSchema,
+  splitHashtagInput,
   updatePostSchema,
 } from "@/lib/validation/posts";
 
@@ -204,5 +205,38 @@ describe("post image paths", () => {
 
   it("caps a post at four images", () => {
     expect(MAX_POST_IMAGES).toBe(4);
+  });
+});
+
+describe("splitHashtagInput", () => {
+  it("reads one written line as the separate tags a reader sees", () => {
+    expect(splitHashtagInput("#今日の推し #尊い")).toEqual([
+      "#今日の推し",
+      "#尊い",
+    ]);
+  });
+
+  it("accepts the separators a Japanese keyboard produces", () => {
+    expect(splitHashtagInput("ライブ、尊い，最高　神席\n現場")).toEqual([
+      "ライブ",
+      "尊い",
+      "最高",
+      "神席",
+      "現場",
+    ]);
+  });
+
+  it("returns nothing for blank or non-text input", () => {
+    for (const candidate of ["", "   ", null, undefined, 7]) {
+      expect(splitHashtagInput(candidate)).toEqual([]);
+    }
+  });
+
+  it("hands the split tags to the schema that trims the hash", () => {
+    const parsed = createPostSchema.safeParse(
+      post({ hashtags: splitHashtagInput(" #ライブ  #尊い ") }),
+    );
+
+    expect(parsed.success && parsed.data.hashtags).toEqual(["ライブ", "尊い"]);
   });
 });
