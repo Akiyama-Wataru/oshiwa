@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 
-import { FormStatus } from "@/app/components/oshis/FormStatus";
+import { FormStatus } from "@/app/components/FormStatus";
 import type {
   OshiAction,
   OshiActionState,

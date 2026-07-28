@@ -15,7 +15,7 @@
     "test:coverage": "vitest run --coverage",
     "test:rendered": "NEXT_PUBLIC_SUPABASE_URL=https://exact-csp-project.supabase.co NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_render_test RENDER_TEST_SUPABASE_ORIGIN=https://exact-csp-project.supabase.co npm run build && NEXT_PUBLIC_SUPABASE_URL=https://exact-csp-project.supabase.co NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_render_test RENDER_TEST_SUPABASE_ORIGIN=https://exact-csp-project.supabase.co node --test tests/rendered-html.test.mjs",
     "test:e2e": "playwright test",
-    "test:sql": "./supabase/tests/run-auth-groups-smoke.sh && ./supabase/tests/run-oshis-smoke.sh",
+    "test:sql": "./supabase/tests/run-auth-groups-smoke.sh && ./supabase/tests/run-oshis-smoke.sh && ./supabase/tests/run-posts-smoke.sh",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next"
   },

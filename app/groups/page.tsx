@@ -192,6 +192,12 @@ export default async function GroupsPage({
                   </p>
                   <Link
                     className="group-card-link"
+                    href={`/groups/${membership.groupId}/posts`}
+                  >
+                    {`${membership.groupName}のタイムラインを見る`}
+                  </Link>
+                  <Link
+                    className="group-card-link"
                     href={`/groups/${membership.groupId}/oshis`}
                   >
                     {`${membership.groupName}の推しを見る`}

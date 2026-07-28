@@ -2,33 +2,20 @@ import { z } from "zod";
 
 import { MEMBER_COLOR_PALETTE } from "@/lib/oshis/member-color";
 import type { SupportedImageExtension } from "@/lib/media/image-signature";
+import {
+  createObjectId,
+  lowercaseUuid,
+  scopedObjectPathPattern,
+} from "@/lib/validation/identifiers";
+import { UNSAFE_DISPLAY_CHARACTER_PATTERN } from "@/lib/validation/text";
 
 export const MAX_OSHIS_PER_GROUP = 50;
 export const OSHI_NAME_MAX_LENGTH = 40;
 
-/**
- * C0 and C1 controls plus the zero-width and bidirectional overrides that let
- * one display name impersonate another. U+200D is allowed so emoji joiner
- * sequences keep working. Mirrors private.has_unsafe_display_characters.
- */
-const UNSAFE_DISPLAY_CHARACTER_PATTERN =
-  /[\u0000-\u001f\u007f-\u009f\u200b\u200c\u200e\u200f\u202a-\u202e\u2066-\u2069\ufeff]/u;
-
-const UUID_SEGMENT =
-  "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
-
-const OSHI_IMAGE_PATH_PATTERN = new RegExp(
-  `^${UUID_SEGMENT}/${UUID_SEGMENT}/[0-9a-f]{32}\\.(?:jpg|png|webp)$`,
+export const oshiGroupIdSchema = lowercaseUuid(
+  "有効なグループを選択してください。",
 );
-
-// PostgreSQL renders uuids in lowercase, and object paths are matched against
-// that rendering, so lowercase is the canonical form everywhere in the app.
-export const oshiGroupIdSchema = z
-  .uuid("有効なグループを選択してください。")
-  .transform((value) => value.toLowerCase());
-export const oshiIdSchema = z
-  .uuid("有効な推しを選択してください。")
-  .transform((value) => value.toLowerCase());
+export const oshiIdSchema = lowercaseUuid("有効な推しを選択してください。");
 
 export const oshiNameSchema = z
   .string()
@@ -53,7 +40,7 @@ export const memberColorSchema = z
 
 export const oshiImagePathSchema = z
   .string()
-  .regex(OSHI_IMAGE_PATH_PATTERN, "画像の保存先が不正です。");
+  .regex(scopedObjectPathPattern(), "画像の保存先が不正です。");
 
 export const createOshiSchema = z.object({
   groupId: oshiGroupIdSchema,
@@ -100,12 +87,7 @@ export function buildOshiImagePath(input: {
   );
 }
 
-/** 32 lowercase hex characters, matching the object-name segment above. */
-export function createOshiImageId(
-  randomUuid: () => string = () => crypto.randomUUID(),
-): string {
-  return randomUuid().replaceAll("-", "").toLowerCase();
-}
+export const createOshiImageId = createObjectId;
 
 export type CreateOshiInput = z.infer<typeof createOshiSchema>;
 export type UpdateOshiInput = z.infer<typeof updateOshiSchema>;

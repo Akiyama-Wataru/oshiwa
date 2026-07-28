@@ -2,13 +2,13 @@
 
 import { useActionState } from "react";
 
-import { FormStatus } from "@/app/components/oshis/FormStatus";
+import { FormStatus } from "@/app/components/FormStatus";
 import type {
   OshiAction,
   OshiActionState,
 } from "@/app/groups/[groupId]/oshis/actions";
 import { SUPPORTED_IMAGE_MIME_TYPES } from "@/lib/media/image-signature";
-import { withCompressedImage } from "@/lib/media/oshi-image-form-data";
+import { withCompressedImages } from "@/lib/media/image-form-data";
 
 const initialState: OshiActionState = { status: "idle", message: "" };
 
@@ -25,7 +25,7 @@ export function OshiImageForm({
 }) {
   const [state, formAction, isPending] = useActionState(
     async (previous: OshiActionState, formData: FormData) =>
-      action(previous, await withCompressedImage(formData)),
+      action(previous, await withCompressedImages(formData)),
     initialState,
   );
   const statusId = `oshi-image-status-${oshiId}`;

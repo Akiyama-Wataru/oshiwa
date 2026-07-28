@@ -1,16 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { SupabaseConfigurationError } from "@/lib/env";
-import {
-  type ImageUploadRejection,
-  inspectImageUpload,
-} from "@/lib/media/image-signature";
-import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { inspectImageUpload } from "@/lib/media/image-signature";
 import { OSHI_IMAGE_BUCKET } from "@/lib/oshis/storage";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import {
+  IMAGE_REJECTION_MESSAGES,
+  removeStorageObjects,
+  reportFailure,
+  resolveServerClient,
+} from "@/lib/supabase/action-support";
 import {
   buildOshiImagePath,
   createOshiImageId,
@@ -46,79 +45,21 @@ const LOCAL_PREVIEW_ERROR = "ローカルプレビューでは推しの管理が
 const ORPHAN_WARNING =
   "保存しましたが、古い画像を削除できませんでした。時間をおいて再度お試しください。";
 
-const IMAGE_REJECTION_MESSAGES: Record<ImageUploadRejection, string> = {
-  empty: "画像ファイルを選択してください。",
-  "too-large": "画像は1MB以下に圧縮してから登録してください。",
-  "unsupported-type": "画像はJPEG・PNG・WebPのみ登録できます。",
-  "unsupported-format": "画像はJPEG・PNG・WebPのみ登録できます。",
-  // A mismatch is almost always an attack, so it gets the same neutral copy.
-  "declared-mismatch": "画像はJPEG・PNG・WebPのみ登録できます。",
-};
-
-/**
- * The messages returned to members are deliberately generic, so the cause has
- * to be recorded somewhere. This writes the operation and the database or
- * storage error, never the caller's data.
- */
-function reportFailure(operation: string, cause: unknown): void {
-  const detail =
-    cause && typeof cause === "object" && "message" in cause
-      ? String((cause as { message: unknown }).message)
-      : String(cause);
-
-  console.error(`[oshis] ${operation} failed: ${detail}`);
-}
-
-type ClientResolution =
-  | { ok: true; client: SupabaseClient }
-  | { ok: false; message: string };
+const SCOPE = "oshis";
 
 function oshisPath(groupId: string): string {
   return `/groups/${groupId}/oshis`;
 }
 
-async function resolveServerClient(
-  fallbackMessage: string,
-): Promise<ClientResolution> {
-  try {
-    return { ok: true, client: await createServerSupabaseClient() };
-  } catch (error) {
-    if (
-      error instanceof SupabaseConfigurationError &&
-      process.env.NODE_ENV !== "production"
-    ) {
-      return { ok: false, message: LOCAL_PREVIEW_ERROR };
-    }
-
-    return { ok: false, message: fallbackMessage };
-  }
+async function resolveClient(fallbackMessage: string) {
+  return resolveServerClient({
+    fallbackMessage,
+    localPreviewMessage: LOCAL_PREVIEW_ERROR,
+  });
 }
 
-/**
- * Storage cleanup runs with the service role because the caller has already
- * been authorized by the RPC that handed back the stale object path, and a
- * plain member is not allowed to delete objects directly.
- */
-async function removeStorageObjects(paths: string[]): Promise<boolean> {
-  if (paths.length === 0) {
-    return true;
-  }
-
-  try {
-    const admin = createAdminSupabaseClient();
-    const { error } = await admin.storage
-      .from(OSHI_IMAGE_BUCKET)
-      .remove(paths);
-
-    if (error) {
-      reportFailure("storage.remove", error);
-    }
-
-    return !error;
-  } catch (cause) {
-    reportFailure("storage.remove", cause);
-    return false;
-  }
+async function discardObjects(paths: readonly string[]): Promise<boolean> {
+  return removeStorageObjects(SCOPE, OSHI_IMAGE_BUCKET, paths);
 }
 
 export async function createOshiAction(
@@ -135,7 +76,7 @@ export async function createOshiAction(
     return { status: "error", message: CREATE_ERROR };
   }
 
-  const resolution = await resolveServerClient(CREATE_ERROR);
+  const resolution = await resolveClient(CREATE_ERROR);
 
   if (!resolution.ok) {
     return { status: "error", message: resolution.message };
@@ -148,7 +89,7 @@ export async function createOshiAction(
   });
 
   if (error) {
-    reportFailure("create_oshi", error);
+    reportFailure(SCOPE, "create_oshi", error);
     return { status: "error", message: CREATE_ERROR };
   }
 
@@ -172,7 +113,7 @@ export async function updateOshiAction(
     return { status: "error", message: UPDATE_ERROR };
   }
 
-  const resolution = await resolveServerClient(UPDATE_ERROR);
+  const resolution = await resolveClient(UPDATE_ERROR);
 
   if (!resolution.ok) {
     return { status: "error", message: resolution.message };
@@ -185,7 +126,7 @@ export async function updateOshiAction(
   });
 
   if (error || data !== true) {
-    reportFailure("update_oshi", error ?? "refused");
+    reportFailure(SCOPE, "update_oshi", error ?? "refused");
     return { status: "error", message: UPDATE_ERROR };
   }
 
@@ -207,7 +148,7 @@ export async function deleteOshiAction(
     return { status: "error", message: DELETE_ERROR };
   }
 
-  const resolution = await resolveServerClient(DELETE_ERROR);
+  const resolution = await resolveClient(DELETE_ERROR);
 
   if (!resolution.ok) {
     return { status: "error", message: resolution.message };
@@ -218,12 +159,12 @@ export async function deleteOshiAction(
   });
 
   if (error) {
-    reportFailure("delete_oshi", error);
+    reportFailure(SCOPE, "delete_oshi", error);
     return { status: "error", message: DELETE_ERROR };
   }
 
   const orphanedPath = typeof data === "string" ? data : null;
-  const cleaned = await removeStorageObjects(orphanedPath ? [orphanedPath] : []);
+  const cleaned = await discardObjects(orphanedPath ? [orphanedPath] : []);
 
   revalidatePath(oshisPath(group.data));
 
@@ -245,7 +186,7 @@ export async function reorderOshisAction(
     return { status: "error", message: REORDER_ERROR };
   }
 
-  const resolution = await resolveServerClient(REORDER_ERROR);
+  const resolution = await resolveClient(REORDER_ERROR);
 
   if (!resolution.ok) {
     return { status: "error", message: resolution.message };
@@ -257,7 +198,7 @@ export async function reorderOshisAction(
   });
 
   if (error) {
-    reportFailure("reorder_oshis", error);
+    reportFailure(SCOPE, "reorder_oshis", error);
     return { status: "error", message: REORDER_ERROR };
   }
 
@@ -307,7 +248,7 @@ export async function uploadOshiImageAction(
     return { status: "error", message: IMAGE_ERROR };
   }
 
-  const resolution = await resolveServerClient(IMAGE_ERROR);
+  const resolution = await resolveClient(IMAGE_ERROR);
 
   if (!resolution.ok) {
     return { status: "error", message: resolution.message };
@@ -321,7 +262,7 @@ export async function uploadOshiImageAction(
     });
 
   if (upload.error) {
-    reportFailure("storage.upload", upload.error);
+    reportFailure(SCOPE, "storage.upload", upload.error);
     return { status: "error", message: IMAGE_ERROR };
   }
 
@@ -331,14 +272,14 @@ export async function uploadOshiImageAction(
   });
 
   if (error) {
-    reportFailure("set_oshi_image", error);
+    reportFailure(SCOPE, "set_oshi_image", error);
     // The row never referenced this object, so it must not survive the failure.
-    await removeStorageObjects([objectPath]);
+    await discardObjects([objectPath]);
     return { status: "error", message: IMAGE_ERROR };
   }
 
   const replacedPath = typeof data === "string" ? data : null;
-  const cleaned = await removeStorageObjects(
+  const cleaned = await discardObjects(
     replacedPath ? [replacedPath] : [],
   );
 

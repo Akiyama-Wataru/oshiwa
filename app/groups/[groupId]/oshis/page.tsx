@@ -215,6 +215,12 @@ export default async function OshisPage({
             <p>
               推しごとに色を決めると、投稿やタイムラインでひと目で見分けられます。
             </p>
+            <Link
+              className="oshi-back-link"
+              href={`/groups/${parsedGroupId.data}/posts`}
+            >
+              タイムラインへ
+            </Link>
             <Link className="oshi-back-link" href="/groups">
               参加中の輪へ戻る
             </Link>
