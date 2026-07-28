@@ -29,7 +29,19 @@ const basePath = `/groups/${groupId}/posts`;
 const oshis: TimelineOshi[] = [{ id: oshiId, name: "ミナ", color: "#ff6f91" }];
 
 const noop = vi.fn() as unknown as PostAction;
-const actions = { attach: noop, detach: noop, remove: noop, update: noop };
+const actions = {
+  attach: noop,
+  detach: noop,
+  remove: noop,
+  update: noop,
+  reactions: {
+    like: noop,
+    reply: noop,
+    removeReply: noop,
+    share: noop,
+    unshare: noop,
+  },
+};
 
 function entry(overrides: Partial<TimelineEntry> = {}): TimelineEntry {
   return {
@@ -45,6 +57,13 @@ function entry(overrides: Partial<TimelineEntry> = {}): TimelineEntry {
     hashtags: ["尊い"],
     canEdit: false,
     canRemove: false,
+    likeCount: 0,
+    likedByViewer: false,
+    replies: [],
+    replyCount: 0,
+    shares: [],
+    shareCount: 0,
+    sharedByViewer: false,
     ...overrides,
   };
 }
@@ -173,6 +192,112 @@ describe("PostCard", () => {
 
     expect(screen.getByLabelText("ミナ")).toBeChecked();
     expect(screen.getByDisplayValue("#尊い")).toBeVisible();
+  });
+
+  it("shows the like as pressed once the reader has liked it", () => {
+    renderCard({ likeCount: 3, likedByViewer: true });
+
+    const like = screen.getByRole("button", { name: /いいね（3件）/u });
+
+    expect(like).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("leaves the like unpressed for a reader who has not liked it", () => {
+    renderCard({ likeCount: 1 });
+
+    expect(
+      screen.getByRole("button", { name: /いいね（1件）/u }),
+    ).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("reads the conversation oldest first and offers a reply", () => {
+    renderCard({
+      replyCount: 2,
+      replies: [
+        {
+          id: "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+          body: "行きたかった",
+          createdAt: "2026-07-27T11:30:00+00:00",
+          authorId: "4d2f6b18-2a70-4a1f-91b1-9d3a2c5e7f01",
+          authorName: "はな",
+          canRemove: false,
+        },
+        {
+          id: "2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e",
+          body: "次は一緒に",
+          createdAt: "2026-07-27T12:00:00+00:00",
+          authorId: "5e3a7c29-3b81-4b2f-82c2-8e4b3d6f8a12",
+          authorName: "みお",
+          canRemove: true,
+        },
+      ],
+    });
+
+    const replies = screen.getByRole("list", { name: "返信" });
+
+    expect(replies.children).toHaveLength(2);
+    expect(replies.textContent?.indexOf("行きたかった")).toBeLessThan(
+      replies.textContent?.indexOf("次は一緒に") ?? -1,
+    );
+    expect(
+      screen.getByRole("button", { name: "みおの返信を削除" }),
+    ).toBeVisible();
+    expect(screen.queryByRole("button", { name: "はなの返信を削除" })).toBeNull();
+    expect(screen.getByLabelText("みおの投稿に返信")).toBeVisible();
+  });
+
+  it("leads to the post's own page only when replies are left off the card", () => {
+    renderCard({ replyCount: 3, replies: [] });
+
+    expect(
+      screen.getByRole("link", { name: "返信をすべて見る（全3件）" }),
+    ).toHaveAttribute("href", `${basePath}/${postId}`);
+  });
+
+  it("keeps the card self contained when it carries the whole conversation", () => {
+    renderCard({
+      replyCount: 1,
+      replies: [
+        {
+          id: "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+          body: "行きたかった",
+          createdAt: "2026-07-27T11:30:00+00:00",
+          authorId: "4d2f6b18-2a70-4a1f-91b1-9d3a2c5e7f01",
+          authorName: "はな",
+          canRemove: false,
+        },
+      ],
+    });
+
+    expect(screen.queryByRole("link", { name: /返信をすべて見る/u })).toBeNull();
+  });
+
+  it("offers the way back rather than a second share the database would refuse", () => {
+    renderCard({ shareCount: 1, sharedByViewer: true });
+
+    expect(
+      screen.getByRole("button", { name: "共有を取り消す" }),
+    ).toBeVisible();
+    expect(screen.queryByText(/輪に共有/u)).toBeNull();
+  });
+
+  it("names who passed the post on, and what they said about it", () => {
+    renderCard({
+      shareCount: 1,
+      shares: [
+        {
+          id: "3c4d5e6f-7a8b-4c9d-8e1f-2a3b4c5d6e7f",
+          note: "これ見て",
+          createdAt: "2026-07-27T12:00:00+00:00",
+          sharerId: "4d2f6b18-2a70-4a1f-91b1-9d3a2c5e7f01",
+          sharerName: "はな",
+          isViewer: false,
+        },
+      ],
+    });
+
+    expect(screen.getByText("はなが共有")).toBeVisible();
+    expect(screen.getByText("これ見て")).toBeVisible();
   });
 });
 

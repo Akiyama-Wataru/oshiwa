@@ -86,6 +86,11 @@ create role service_role nologin bypassrls;
 
 create schema auth;
 
+-- Hosted Supabase lets the API roles reach auth.uid(). Without this grant the
+-- harness refuses at the schema instead of at the table, and every assertion
+-- that a direct write is revoked would pass for the wrong reason.
+grant usage on schema auth to anon, authenticated, service_role;
+
 create table auth.users (
   id uuid primary key,
   email text,

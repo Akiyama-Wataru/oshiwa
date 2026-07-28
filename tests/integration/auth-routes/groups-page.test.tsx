@@ -14,7 +14,7 @@ vi.mock("@/lib/supabase/server", () => ({
   createServerSupabaseClient: mocks.createServerSupabaseClient,
 }));
 
-function clientWithMemberships(memberships: unknown) {
+function clientWithMemberships(memberships: unknown, unread: unknown = 0) {
   return {
     auth: {
       getUser: vi.fn().mockResolvedValue({
@@ -31,6 +31,7 @@ function clientWithMemberships(memberships: unknown) {
     from: vi.fn(() => ({
       select: vi.fn().mockResolvedValue({ data: memberships, error: null }),
     })),
+    rpc: vi.fn().mockResolvedValue({ data: unread, error: null }),
   };
 }
 
@@ -113,6 +114,43 @@ describe("GroupsPage", () => {
     expect(screen.getByRole("button", { name: "グループを作る" })).toBeEnabled();
   });
 
+  it("says how many notifications are waiting, and links to them", async () => {
+    mocks.createServerSupabaseClient.mockResolvedValue(
+      clientWithMemberships([], 4),
+    );
+    const { default: GroupsPage } = await import("@/app/groups/page");
+
+    render(await GroupsPage());
+
+    expect(
+      screen.getByRole("link", { name: "お知らせ（未読4件）" }),
+    ).toHaveAttribute("href", "/notifications");
+  });
+
+  it("keeps the circles when the unread count cannot be read", async () => {
+    const client = clientWithMemberships([
+      {
+        group_id: "2b75e8eb-4965-4dcf-9c39-4d6ad37fbefd",
+        role: "member",
+        groups: {
+          id: "2b75e8eb-4965-4dcf-9c39-4d6ad37fbefd",
+          name: "同担の輪",
+        },
+      },
+    ]);
+    client.rpc = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: new Error("statement timeout") });
+    mocks.createServerSupabaseClient.mockResolvedValue(client);
+    const { default: GroupsPage } = await import("@/app/groups/page");
+
+    render(await GroupsPage());
+
+    // The badge is a hint. A failed hint must not cost the reader their list.
+    expect(screen.getByText("同担の輪")).toBeVisible();
+    expect(screen.getByRole("link", { name: "お知らせ" })).toBeVisible();
+  });
+
   it("redirects an unauthenticated visitor before loading memberships", async () => {
     const from = vi.fn();
     mocks.createServerSupabaseClient.mockResolvedValue({
@@ -152,6 +190,7 @@ describe("GroupsPage", () => {
           error: new Error("private query detail"),
         }),
       })),
+      rpc: vi.fn().mockResolvedValue({ data: 0, error: null }),
     });
     const { default: GroupsPage } = await import("@/app/groups/page");
 

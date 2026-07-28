@@ -15,6 +15,8 @@ const otherPostId = "9f4e2c1a-2b3d-4e5f-8a9b-0c1d2e3f4a5b";
 const authorId = "4d2f6b18-2a70-4a1f-91b1-9d3a2c5e7f01";
 const readerId = "5e3a7c29-3b81-4b2f-82c2-8e4b3d6f8a12";
 const oshiId = "6f4b8d3a-4c92-4c3f-93d3-7f5c4e7a9b23";
+const replyId = "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d";
+const shareId = "2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e";
 
 function imagePath(suffix: string): string {
   return `${groupId}/${postId}/${suffix.repeat(32)}.webp`;
@@ -129,6 +131,66 @@ describe("normalizeTimelineRows", () => {
     expect(own).toMatchObject({ canEdit: true, canRemove: true });
     expect(asMember).toMatchObject({ canEdit: false, canRemove: false });
     expect(asManager).toMatchObject({ canEdit: false, canRemove: true });
+  });
+
+  it("carries the reactions the row reports", () => {
+    const [entry] = normalizeTimelineRows(
+      [
+        row({
+          like_count: 3,
+          liked_by_viewer: true,
+          reply_count: 5,
+          replies: [
+            {
+              id: replyId,
+              body: "わたしも行きたかった",
+              created_at: "2026-07-27T11:30:00+00:00",
+              author_id: readerId,
+              author_name: "はな",
+            },
+          ],
+          share_count: 1,
+          shared_by_viewer: false,
+          shares: [
+            {
+              id: shareId,
+              note: "これ見て",
+              created_at: "2026-07-27T12:00:00+00:00",
+              sharer_id: readerId,
+              sharer_name: "はな",
+            },
+          ],
+        }),
+      ],
+      viewer,
+    );
+
+    expect(entry).toMatchObject({
+      likeCount: 3,
+      likedByViewer: true,
+      replyCount: 5,
+      shareCount: 1,
+      sharedByViewer: false,
+    });
+    expect(entry.replies).toHaveLength(1);
+    expect(entry.shares[0].note).toBe("これ見て");
+    // The page carries the newest few replies; the rest live on the post's own
+    // page, and the card needs to know that there are more.
+    expect(entry.replyCount).toBeGreaterThan(entry.replies.length);
+  });
+
+  it("reads a row from before the reactions existed as untouched", () => {
+    const [entry] = normalizeTimelineRows([row()], viewer);
+
+    expect(entry).toMatchObject({
+      likeCount: 0,
+      likedByViewer: false,
+      replyCount: 0,
+      shareCount: 0,
+      sharedByViewer: false,
+    });
+    expect(entry.replies).toEqual([]);
+    expect(entry.shares).toEqual([]);
   });
 });
 

@@ -81,6 +81,7 @@ export default async function GroupsPage({
   const query = (await searchParams) ?? {};
   let memberships: GroupMembership[] = [];
   let membershipLoadFailed = false;
+  let unreadNotifications = 0;
 
   try {
     const supabase = await createServerSupabaseClient();
@@ -102,6 +103,12 @@ export default async function GroupsPage({
     } else {
       memberships = normalizeMemberships(data);
     }
+
+    // A count that cannot be read is shown as none: the badge is a hint, and a
+    // failed hint must not cost the reader their list of circles.
+    const { data: unread } = await supabase.rpc("count_unread_notifications");
+
+    unreadNotifications = typeof unread === "number" ? unread : Number(unread) || 0;
   } catch (error) {
     if (
       error instanceof SupabaseConfigurationError &&
@@ -144,6 +151,11 @@ export default async function GroupsPage({
             </p>
             <h1 id="groups-title">参加中の輪</h1>
             <p>グループを選んで、みんなの推し活を見にいきましょう。</p>
+            <Link className="oshi-back-link" href="/notifications">
+              {unreadNotifications > 0
+                ? `お知らせ（未読${unreadNotifications}件）`
+                : "お知らせ"}
+            </Link>
           </div>
 
           <aside className="group-create-panel" aria-labelledby="create-title">
