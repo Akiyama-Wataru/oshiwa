@@ -191,6 +191,12 @@ psql "${psql_args[@]}" \
 psql "${psql_args[@]}" \
   -f "${repository_root}/supabase/tests/reactions.sql"
 
+# Whole schema invariants. This runs last, against every migration applied
+# above, so a table added by a later phase is covered without anybody adding a
+# case for it.
+psql "${psql_args[@]}" \
+  -f "${repository_root}/supabase/tests/schema_guard.sql"
+
 # Two connections tapping the same like at once. The invariants above run in one
 # transaction and so cannot say anything about contention.
 concurrent_like_post_id="$(
