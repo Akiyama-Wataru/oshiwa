@@ -1,7 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
-
+import { useActionFormState } from "@/app/components/useActionFormState";
 import type {
   LogoutAction,
   LogoutActionState,
@@ -13,7 +12,10 @@ const initialState: LogoutActionState = {
 };
 
 export function LogoutButton({ action }: { action: LogoutAction }) {
-  const [state, formAction, isPending] = useActionState(action, initialState);
+  const [state, formAction, isPending] = useActionFormState(
+    action,
+    initialState,
+  );
 
   return (
     <form action={formAction}>

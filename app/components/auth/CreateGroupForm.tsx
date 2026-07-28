@@ -1,7 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
-
+import { useActionFormState } from "@/app/components/useActionFormState";
 import type {
   CreateGroupAction,
   CreateGroupActionState,
@@ -13,7 +12,10 @@ const initialState: CreateGroupActionState = {
 };
 
 export function CreateGroupForm({ action }: { action: CreateGroupAction }) {
-  const [state, formAction, isPending] = useActionState(action, initialState);
+  const [state, formAction, isPending] = useActionFormState(
+    action,
+    initialState,
+  );
 
   return (
     <form
