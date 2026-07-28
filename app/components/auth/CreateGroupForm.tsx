@@ -1,5 +1,6 @@
 "use client";
 
+import { FormStatus } from "@/app/components/FormStatus";
 import { useActionFormState } from "@/app/components/useActionFormState";
 import type {
   CreateGroupAction,
@@ -43,14 +44,11 @@ export function CreateGroupForm({ action }: { action: CreateGroupAction }) {
       >
         {isPending ? "作成中" : "グループを作る"}
       </button>
-      <p
-        className={`auth-inline-status ${state.status === "error" ? "is-error" : ""}`}
+      <FormStatus
         id="create-group-status"
-        aria-live="polite"
-        role={state.status === "error" ? "alert" : "status"}
-      >
-        {isPending ? "グループを作成しています…" : state.message}
-      </p>
+        message={isPending ? "グループを作成しています…" : state.message}
+        status={state.status}
+      />
     </form>
   );
 }

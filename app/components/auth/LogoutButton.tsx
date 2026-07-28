@@ -26,7 +26,7 @@ export function LogoutButton({ action }: { action: LogoutAction }) {
       >
         {isPending ? "ログアウト中" : "ログアウト"}
       </button>
-      <p className="auth-inline-status" aria-live="polite" role="status">
+      <p className="auth-inline-status" role="status">
         {state.message}
       </p>
     </form>

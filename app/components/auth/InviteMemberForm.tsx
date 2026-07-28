@@ -65,8 +65,7 @@ export function InviteMemberForm({
         className={`invite-result is-${state.status}`}
         id={`invite-status-${groupId}`}
         data-testid="invite-status"
-        aria-live="polite"
-        role={state.status === "error" ? "alert" : "status"}
+        role="status"
       >
         <p>{isPending ? "招待を安全に作成しています…" : state.message}</p>
         {state.manualLink ? (

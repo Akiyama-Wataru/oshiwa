@@ -67,8 +67,7 @@ export function ManualInviteLink({ path }: { path: string }) {
       </button>
       <p
         className={`copy-feedback is-${copyStatus}`}
-        aria-live="polite"
-        role={copyStatus === "error" ? "alert" : "status"}
+        role="status"
       >
         {copyStatus === "success"
           ? "リンクをコピーしました。"

@@ -25,10 +25,10 @@ describe("ManualInviteLink", () => {
     await user.click(screen.getByRole("button", { name: "手動リンクをコピー" }));
 
     expect(writeText).toHaveBeenCalledWith(absoluteUrl);
-    expect(await screen.findByText("リンクをコピーしました。")).toHaveAttribute(
-      "aria-live",
-      "polite",
-    );
+    const region = await screen.findByText("リンクをコピーしました。");
+
+    expect(region).toHaveAttribute("role", "status");
+    expect(region).not.toHaveAttribute("aria-live");
   });
 
   it("falls back to document copy when Clipboard API is unavailable", async () => {
@@ -68,6 +68,6 @@ describe("ManualInviteLink", () => {
       await screen.findByText(
         "コピーできませんでした。リンクを選択してコピーしてください。",
       ),
-    ).toHaveAttribute("role", "alert");
+    ).toHaveAttribute("role", "status");
   });
 });
