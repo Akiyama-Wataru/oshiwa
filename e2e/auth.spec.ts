@@ -15,15 +15,19 @@ test("未認証のグループ画面を安全なログインURLへ戻す", async
   );
 });
 
-test("手動招待をキャッシュせず、可視エラーへトークンを漏らさない", async ({ page }) => {
+test("招待トークンだけでは参加させず、どこにも残さない", async ({ page }) => {
   const token = "a".repeat(64);
 
   const response = await page.goto(`/join/${token}`);
 
-  await expect(page).toHaveURL(`/join/${token}`);
-  await expect(page.getByRole("alert")).toContainText(
-    "招待を確認できませんでした",
+  // Holding the link is not enough: acceptance always needs a verified
+  // session, so an anonymous visitor is sent to sign in first.
+  await expect(page).toHaveURL(
+    `/login?returnTo=${encodeURIComponent(`/join/${token}`)}`,
   );
+  await expect(
+    page.getByRole("heading", { level: 1, name: "ログイン" }),
+  ).toBeVisible();
   await expect(page.locator("body")).not.toContainText(token);
   expect(response?.headers()["cache-control"]).toMatch(/private/i);
   expect(response?.headers()["cache-control"]).toMatch(/no-store/i);

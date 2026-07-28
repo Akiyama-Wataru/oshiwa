@@ -41,18 +41,26 @@ export function LoginForm({
             disabled={isPending}
           />
         </label>
-        <label>
-          パスワード
-          <input
-            type="password"
-            name="password"
-            autoComplete="current-password"
-            minLength={12}
-            maxLength={128}
-            required
-            disabled={isPending}
-          />
-        </label>
+        {/* The browser silently refuses to submit a shorter password, so the
+            requirement has to be readable before the button is pressed. */}
+        <div className="auth-field">
+          <label>
+            パスワード
+            <input
+              type="password"
+              name="password"
+              autoComplete="current-password"
+              minLength={12}
+              maxLength={128}
+              required
+              disabled={isPending}
+              aria-describedby="login-password-help"
+            />
+          </label>
+          <p className="auth-field-help" id="login-password-help">
+            12文字以上で入力してください。
+          </p>
+        </div>
         <button
           className="button button-primary"
           type="submit"

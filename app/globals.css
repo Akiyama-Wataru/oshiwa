@@ -939,6 +939,18 @@ summary:focus-visible {
   margin-top: 26px;
 }
 
+.auth-field {
+  display: grid;
+  gap: 6px;
+}
+
+.auth-field-help {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
 .auth-helper {
   /* Clears the submit button's 5px offset shadow: a negative pull-up here
      printed this line underneath the button. */

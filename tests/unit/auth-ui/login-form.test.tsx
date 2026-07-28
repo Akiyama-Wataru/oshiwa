@@ -6,6 +6,22 @@ import { LoginForm } from "@/app/components/auth/LoginForm";
 import type { LoginAction } from "@/app/login/actions";
 
 describe("LoginForm", () => {
+  it("states the password length rule before the button is pressed", () => {
+    const action = vi.fn() as unknown as LoginAction;
+
+    render(<LoginForm action={action} returnTo="/groups" />);
+
+    const password = screen.getByLabelText("パスワード");
+
+    // The browser blocks a short password with no visible message of its own,
+    // so the requirement has to be on screen and tied to the field.
+    expect(password).toHaveAttribute("minLength", "12");
+    expect(password).toHaveAccessibleDescription(
+      "12文字以上で入力してください。",
+    );
+    expect(screen.getByText("12文字以上で入力してください。")).toBeVisible();
+  });
+
   it("announces the pending state and disables repeat submission", async () => {
     let finish: ((value: {
       status: "error";

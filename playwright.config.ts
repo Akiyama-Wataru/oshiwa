@@ -27,7 +27,19 @@ export default defineConfig({
   webServer: {
     command: "npm run dev",
     url: "http://localhost:3000",
-    reuseExistingServer: true,
+    // Never reuse a developer's server: it would run the suite against
+    // whatever .env.local happens to hold, which silently changes which code
+    // path is exercised.
+    reuseExistingServer: false,
     timeout: 120_000,
+    env: {
+      // Configured, but pointed at a closed port so every Supabase call fails
+      // immediately. The suite then always exercises the configured, signed
+      // out path instead of the "Supabase is missing" fallback, and it never
+      // touches a real project.
+      NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:9",
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_e2e",
+      NEXT_PUBLIC_SITE_URL: "http://localhost:3000",
+    },
   },
 });
