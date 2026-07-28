@@ -1,7 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
-
+import { useActionFormState } from "@/app/components/useActionFormState";
 import type { JoinAction, JoinActionState } from "@/app/join/[token]/actions";
 
 const initialState: JoinActionState = {
@@ -16,7 +15,10 @@ export function AcceptInvitationForm({
   action: JoinAction;
   token: string;
 }) {
-  const [state, formAction, isPending] = useActionState(action, initialState);
+  const [state, formAction, isPending] = useActionFormState(
+    action,
+    initialState,
+  );
 
   return (
     <form

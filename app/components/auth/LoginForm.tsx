@@ -1,7 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
-
+import { useActionFormState } from "@/app/components/useActionFormState";
 import type {
   LoginAction,
   LoginActionState,
@@ -19,7 +18,10 @@ export function LoginForm({
   action: LoginAction;
   returnTo: string;
 }) {
-  const [state, formAction, isPending] = useActionState(action, initialState);
+  const [state, formAction, isPending] = useActionFormState(
+    action,
+    initialState,
+  );
 
   return (
     <>
