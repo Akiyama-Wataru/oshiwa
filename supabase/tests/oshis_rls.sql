@@ -713,6 +713,18 @@ do $assert$
 declare
   helper text;
 begin
+  -- Both roles matter: authenticated is what Storage evaluates the policy as,
+  -- and the owner of storage.objects resolves the same names on other paths.
+  -- EXECUTE on a helper is dead weight without USAGE on its schema.
+  if not pg_catalog.has_schema_privilege(
+    'authenticated',
+    'private',
+    'usage'
+  ) then
+    raise exception
+      'authenticated cannot use the private schema, so its EXECUTE grants are unusable';
+  end if;
+
   if not pg_catalog.has_schema_privilege(
     'supabase_storage_admin',
     'private',

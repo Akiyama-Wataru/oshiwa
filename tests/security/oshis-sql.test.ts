@@ -40,6 +40,9 @@ function extractSqlFunction(sql: string, qualifiedName: string) {
 }
 
 const migrationSql = readIfPresent(migrationPath);
+const schemaUsageSql = readIfPresent(
+  join(migrationsRoot, "20260726000200_private_schema_usage.sql"),
+);
 const storagePrivilegeSql = readIfPresent(
   join(
     migrationsRoot,
@@ -304,6 +307,13 @@ describe("Supabase oshi and media SQL contract", () => {
     expect(storagePrivilegeSql).toMatch(
       /grant\s+usage\s+on\s+schema\s+private\s+to\s+supabase_storage_admin/i,
     );
+    // EXECUTE on a helper does nothing without USAGE on the schema holding it.
+    expect(schemaUsageSql).toMatch(
+      /grant\s+usage\s+on\s+schema\s+private\s+to\s+authenticated/i,
+    );
+    expect(schemaUsageSql).not.toMatch(
+      /grant[^;]*on\s+all\s+functions\s+in\s+schema\s+private/i,
+    );
 
     for (const helper of [
       "private\\.is_group_member\\(uuid\\)",
@@ -358,6 +368,7 @@ describe("Supabase oshi and media SQL contract", () => {
     expect(smokeScript).toMatch(/auth_groups\.sql/i);
     expect(smokeScript).toMatch(/oshis_media\.sql/i);
     expect(smokeScript).toMatch(/storage_policy_privileges\.sql/i);
+    expect(smokeScript).toMatch(/private_schema_usage\.sql/i);
     // The harness has to mirror the hosted ownership of storage.objects,
     // otherwise the privilege assertions above would have nothing to check.
     expect(smokeScript).toMatch(/create\s+role\s+supabase_storage_admin/i);

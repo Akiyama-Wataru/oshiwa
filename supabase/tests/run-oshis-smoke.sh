@@ -142,6 +142,8 @@ psql "${psql_args[@]}" \
   -f "${repository_root}/supabase/migrations/20260725000100_oshis_media.sql"
 psql "${psql_args[@]}" \
   -f "${repository_root}/supabase/migrations/20260726000100_storage_policy_privileges.sql"
+psql "${psql_args[@]}" \
+  -f "${repository_root}/supabase/migrations/20260726000200_private_schema_usage.sql"
 
 storage_rls_enabled="$(
   psql "${psql_args[@]}" -qAt -c \
