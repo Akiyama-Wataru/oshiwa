@@ -103,12 +103,14 @@ describe("Supabase auth and group SQL contract", () => {
     ).toBe(true);
   });
 
-  it("pins a local Supabase project to PostgreSQL 16 and exposes only public APIs", () => {
+  it("pins a local Supabase project to PostgreSQL 17 and exposes only public APIs", () => {
     expect(configToml).toMatch(/project_id\s*=\s*"oshikatu"/i);
     expect(configToml).toMatch(/\[api\][\s\S]*schemas\s*=\s*\["public"\]/i);
     expect(configToml).not.toMatch(/schemas\s*=\s*\[[^\]]*"private"/i);
+    // Supabase hosts PostgreSQL 15 and 17; 16 was never an option and the CLI
+    // refuses to read a config that names it.
     expect(configToml).toMatch(
-      /\[db\][\s\S]*major_version\s*=\s*16\b/i,
+      /\[db\][\s\S]*major_version\s*=\s*17\b/i,
     );
   });
 

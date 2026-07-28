@@ -69,7 +69,7 @@ npm run test:e2e
 npm run test:all
 ```
 
-データベースの不変条件は、使い捨てのPostgreSQLクラスタを立ち上げて検証します。ローカルに`initdb` / `pg_ctl` / `psql`（PostgreSQL 16）が必要です。
+データベースの不変条件は、使い捨てのPostgreSQLクラスタを立ち上げて検証します。ローカルに`initdb` / `pg_ctl` / `psql`が必要です。本番のSupabaseは`supabase/config.toml`に合わせてPostgreSQL 17ですが、不変条件で使っている機能はいずれもPostgreSQL 13以降で安定しているため、手元のメジャーバージョンが異なっていても検証は成立します。
 
 ```bash
 ./supabase/tests/run-auth-groups-smoke.sh
