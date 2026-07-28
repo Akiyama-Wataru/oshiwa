@@ -1,6 +1,6 @@
 const LOCAL_ORIGIN = "https://return-to.invalid";
 const DEFAULT_RETURN_TO = "/groups";
-const AUTH_ENTRY_PATHS = ["/login", "/auth"];
+const AUTH_ENTRY_PATHS = ["/login", "/auth", "/password"];
 const INVITATION_CONTINUATION_PATH = /^\/join\/[a-f0-9]{64}$/u;
 
 function normalizeSafePath(value: unknown): string | null {
