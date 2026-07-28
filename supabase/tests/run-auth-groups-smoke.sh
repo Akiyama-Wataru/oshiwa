@@ -22,7 +22,12 @@ export LC_ALL="${utf8_locale}"
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repository_root="$(cd "${script_dir}/../.." && pwd)"
-cluster_root="$(mktemp -d /private/tmp/oshiwa-auth-groups.XXXXXX)"
+# The cleanup below deletes this tree, so the prefix it has to match is
+# written once and reused rather than repeated as a literal. TMPDIR keeps
+# it portable: /private/tmp exists on macOS but not on a Linux runner.
+temporary_root="${TMPDIR:-/tmp}"
+cluster_prefix="${temporary_root%/}/oshiwa-auth-groups."
+cluster_root="$(mktemp -d "${cluster_prefix}XXXXXX")"
 data_dir="${cluster_root}/data"
 socket_dir="${cluster_root}/socket"
 server_log="${cluster_root}/postgres.log"
@@ -39,7 +44,7 @@ cleanup() {
   fi
 
   case "${cluster_root}" in
-    /private/tmp/oshiwa-auth-groups.*)
+    "${cluster_prefix}"*)
       rm -rf -- "${cluster_root}"
       ;;
     *)
