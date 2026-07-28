@@ -2,10 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import type {
-  PostAction,
-  PostActionState,
-} from "@/app/groups/[groupId]/posts/actions";
+import type { PostActionState } from "@/app/groups/[groupId]/posts/actions";
 import {
   reportFailure,
   resolveServerClient,
