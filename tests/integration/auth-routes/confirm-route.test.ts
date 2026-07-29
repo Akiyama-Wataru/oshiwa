@@ -36,6 +36,49 @@ describe("GET /auth/confirm", () => {
     expect(response.headers.get("cache-control")).toContain("no-store");
   });
 
+  it("verifies a sign up confirmation and lands where the member was heading", async () => {
+    const verifyOtp = vi.fn().mockResolvedValue({ error: null });
+    createServerSupabaseClient.mockResolvedValue({ auth: { verifyOtp } });
+    const { GET } = await import("@/app/auth/confirm/route");
+    const tokenHash = "c".repeat(64);
+    const next = `/invite/${"d".repeat(64)}`;
+
+    const response = await GET(
+      new Request(
+        `https://oshiwa.test/auth/confirm?type=signup&token_hash=${tokenHash}&next=${encodeURIComponent(next)}`,
+      ),
+    );
+
+    // Anybody can register now, so this is an ordinary arrival rather than a
+    // link that should be treated as a mistake.
+    expect(verifyOtp).toHaveBeenCalledWith({
+      type: "signup",
+      token_hash: tokenHash,
+    });
+    expect(response.headers.get("location")).toBe(
+      `https://oshiwa.test${next}`,
+    );
+  });
+
+  it("tells a new member their own link expired, not that an invitation did", async () => {
+    createServerSupabaseClient.mockResolvedValue({
+      auth: {
+        verifyOtp: vi.fn().mockResolvedValue({ error: new Error("expired") }),
+      },
+    });
+    const { GET } = await import("@/app/auth/confirm/route");
+
+    const response = await GET(
+      new Request(
+        `https://oshiwa.test/auth/confirm?type=signup&token_hash=${"e".repeat(64)}`,
+      ),
+    );
+
+    expect(response.headers.get("location")).toBe(
+      "https://oshiwa.test/login?status=signup-confirmation-failed",
+    );
+  });
+
   it("accepts a same-origin absolute join URL and preserves query and hash", async () => {
     createServerSupabaseClient.mockResolvedValue({
       auth: { verifyOtp: vi.fn().mockResolvedValue({ error: null }) },

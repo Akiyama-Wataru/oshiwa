@@ -46,6 +46,7 @@ function formData(entries: Record<string, string>) {
 describe("signupAction", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://oshiwa.example.test");
   });
 
   it("registers the member and sends them where they were going", async () => {
@@ -71,7 +72,10 @@ describe("signupAction", () => {
     expect(signUp).toHaveBeenCalledWith({
       email: "fan@example.com",
       password: "correct horse battery",
-      options: { data: { display_name: "みお" } },
+      options: {
+        data: { display_name: "みお" },
+        emailRedirectTo: `https://oshiwa.example.test/auth/confirm?next=${encodeURIComponent(`/invite/${token}`)}`,
+      },
     });
   });
 

@@ -27,7 +27,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps = {}) {
     typeof query.returnTo === "string" ? query.returnTo : null,
     "/groups",
   );
-  const confirmationFailed = query.status === "confirmation-failed";
+  const status = typeof query.status === "string" ? query.status : null;
+  const confirmationFailed = status === "confirmation-failed";
+  const signupConfirmationFailed = status === "signup-confirmation-failed";
 
   return (
     <main className="auth-shell">
@@ -45,6 +47,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps = {}) {
         {confirmationFailed ? (
           <p className="auth-status is-error" role="alert">
             招待を確認できませんでした。管理者に招待の再発行を依頼してください。
+          </p>
+        ) : null}
+        {signupConfirmationFailed ? (
+          <p className="auth-status is-error" role="alert">
+            確認リンクの期限が切れているようです。もう一度登録するか、ログインをお試しください。
           </p>
         ) : null}
         <LoginForm action={loginAction} returnTo={returnTo} />
