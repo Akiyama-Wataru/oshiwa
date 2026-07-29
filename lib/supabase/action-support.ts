@@ -21,17 +21,53 @@ export type ActionClientResolution =
  * to be recorded somewhere. This writes the operation and the database or
  * storage error, never the caller's data.
  */
+/** The fields these libraries actually carry the reason in. */
+const CAUSE_FIELDS = [
+  "message",
+  "code",
+  "status",
+  "error",
+  "error_description",
+  "details",
+  "hint",
+] as const;
+
+export function describeFailureCause(cause: unknown): string {
+  if (cause instanceof Error) {
+    return `${cause.name}: ${cause.message}`;
+  }
+
+  if (cause && typeof cause === "object") {
+    const record = cause as Record<string, unknown>;
+    const described = CAUSE_FIELDS.filter(
+      (field) => record[field] !== undefined && record[field] !== null,
+    ).map((field) => `${field}=${String(record[field])}`);
+
+    if (described.length > 0) {
+      return described.join(" ");
+    }
+
+    // Reading one expected field and giving up left "{}" in the log, which
+    // says only that something went wrong. The whole point of recording this
+    // is to be able to tell what.
+    try {
+      return JSON.stringify(cause);
+    } catch {
+      return "[unserialisable cause]";
+    }
+  }
+
+  return String(cause);
+}
+
 export function reportFailure(
   scope: string,
   operation: string,
   cause: unknown,
 ): void {
-  const detail =
-    cause && typeof cause === "object" && "message" in cause
-      ? String((cause as { message: unknown }).message)
-      : String(cause);
-
-  console.error(`[${scope}] ${operation} failed: ${detail}`);
+  console.error(
+    `[${scope}] ${operation} failed: ${describeFailureCause(cause)}`,
+  );
 }
 
 export async function resolveServerClient(options: {

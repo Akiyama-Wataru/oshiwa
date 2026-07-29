@@ -23,6 +23,8 @@ const SCOPE = "signup";
 
 const SIGNUP_ERROR =
   "登録できませんでした。入力内容を確認してもう一度お試しください。";
+const UNAVAILABLE_MESSAGE =
+  "いま登録を受け付けられませんでした。時間をおいてもう一度お試しください。";
 const TAKEN_MESSAGE =
   "このメールアドレスは登録済みです。ログインしてください。";
 const CONFIRM_MESSAGE =
@@ -73,11 +75,20 @@ export async function signupAction(
     if (error) {
       reportFailure(SCOPE, "signUp", error);
 
+      if (/already|registered|exists/iu.test(error.message)) {
+        return { status: "error", message: TAKEN_MESSAGE };
+      }
+
+      // A retryable failure is ours, not theirs: the address and the password
+      // never reached anything that judged them. Telling somebody to check
+      // their input sends them to look for a mistake they did not make.
+      const isOurs =
+        error.name === "AuthRetryableFetchError" ||
+        (typeof error.status === "number" && error.status >= 500);
+
       return {
         status: "error",
-        message: /already|registered|exists/iu.test(error.message)
-          ? TAKEN_MESSAGE
-          : SIGNUP_ERROR,
+        message: isOurs ? UNAVAILABLE_MESSAGE : SIGNUP_ERROR,
       };
     }
 
