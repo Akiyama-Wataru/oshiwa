@@ -115,6 +115,31 @@ describe("signupAction", () => {
     expect(signUp).not.toHaveBeenCalled();
   });
 
+  it("does not blame the member's input when the fault is ours", async () => {
+    const failure = Object.assign(new Error("{}"), {
+      name: "AuthRetryableFetchError",
+      status: 500,
+    });
+    const signUp = vi
+      .fn()
+      .mockResolvedValue({ data: { session: null, user: null }, error: failure });
+    mocks.createServerSupabaseClient.mockResolvedValue({ auth: { signUp } });
+    const { signupAction } = await import("@/app/signup/actions");
+
+    const result = await signupAction(
+      signupState,
+      formData({
+        email: "fan@example.com",
+        password: "correct horse battery",
+        displayName: "みお",
+      }),
+    );
+
+    // The address and the password never reached anything that judged them.
+    expect(result.message).not.toContain("入力内容");
+    expect(result.message).toContain("時間をおいて");
+  });
+
   it("points an existing address at the login screen", async () => {
     const signUp = vi.fn().mockResolvedValue({
       data: { session: null, user: null },
