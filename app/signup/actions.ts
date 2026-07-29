@@ -7,6 +7,7 @@ import { SupabaseConfigurationError } from "@/lib/env";
 import { reportFailure } from "@/lib/supabase/action-support";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { signupSchema } from "@/lib/validation/auth";
+import { siteUrlSchemaForMode } from "@/lib/validation/groups";
 
 export type SignupActionState = {
   status: "idle" | "error" | "confirm";
@@ -47,6 +48,9 @@ export async function signupAction(
   }
 
   const destination = safeReturnTo(formData.get("returnTo"), "/groups");
+  const siteUrl = siteUrlSchemaForMode(process.env.NODE_ENV).safeParse(
+    process.env.NEXT_PUBLIC_SITE_URL,
+  );
 
   try {
     const supabase = await createServerSupabaseClient();
@@ -55,6 +59,14 @@ export async function signupAction(
       password: parsed.data.password,
       options: {
         data: { display_name: parsed.data.displayName },
+        // Said explicitly rather than left to the project's Site URL, so that
+        // a confirmation opened from a local sign up comes back to the local
+        // app, and so that whoever confirms lands where they were heading.
+        ...(siteUrl.success
+          ? {
+              emailRedirectTo: `${siteUrl.data}/auth/confirm?next=${encodeURIComponent(destination)}`,
+            }
+          : {}),
       },
     });
 

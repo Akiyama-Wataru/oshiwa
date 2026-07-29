@@ -40,26 +40,48 @@ function confirmationDestination(requestUrl: URL, value: string | null) {
 /** Where a link of each kind is allowed to be on its way to. */
 const RECOVERY_DESTINATION = "/password/update";
 const INVITE_FAILURE = "/login?status=confirmation-failed";
+const SIGNUP_FAILURE = "/login?status=signup-confirmation-failed";
 const RECOVERY_FAILURE = "/password/reset?status=link-expired";
+
+/**
+ * The three kinds of link this route is on the receiving end of. A sign up
+ * confirmation is one of them now that anybody can register: without it, a new
+ * member who did everything right would be told their link was no good.
+ */
+const CONFIRMATION_TYPES = ["invite", "recovery", "signup"] as const;
+
+type ConfirmationType = (typeof CONFIRMATION_TYPES)[number];
+
+function readType(value: string | null): ConfirmationType | null {
+  return CONFIRMATION_TYPES.includes(value as ConfirmationType)
+    ? (value as ConfirmationType)
+    : null;
+}
+
+const FAILURES: Record<ConfirmationType, string> = {
+  invite: INVITE_FAILURE,
+  recovery: RECOVERY_FAILURE,
+  signup: SIGNUP_FAILURE,
+};
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
-  const type = requestUrl.searchParams.get("type");
+  const type = readType(requestUrl.searchParams.get("type"));
   const tokenHash = inviteTokenSchema.safeParse(
     requestUrl.searchParams.get("token_hash"),
   );
 
-  if ((type !== "invite" && type !== "recovery") || !tokenHash.success) {
+  if (type === null || !tokenHash.success) {
     return redirectResponse(request, INVITE_FAILURE);
   }
 
-  const isRecovery = type === "recovery";
-  const failure = isRecovery ? RECOVERY_FAILURE : INVITE_FAILURE;
+  const failure = FAILURES[type];
   // A recovery link is only ever on its way to the form that sets the new
   // password, so its destination is fixed rather than read from the query.
-  const destination = isRecovery
-    ? RECOVERY_DESTINATION
-    : confirmationDestination(requestUrl, requestUrl.searchParams.get("next"));
+  const destination =
+    type === "recovery"
+      ? RECOVERY_DESTINATION
+      : confirmationDestination(requestUrl, requestUrl.searchParams.get("next"));
 
   try {
     const supabase = await createServerSupabaseClient();
