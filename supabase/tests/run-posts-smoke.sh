@@ -176,6 +176,8 @@ psql "${psql_args[@]}" \
   -f "${repository_root}/supabase/migrations/20260728000100_posts_timeline_read.sql"
 psql "${psql_args[@]}" \
   -f "${repository_root}/supabase/migrations/20260728000200_reactions_notifications.sql"
+psql "${psql_args[@]}" \
+  -f "${repository_root}/supabase/migrations/20260729000100_group_join_links.sql"
 
 # The same script the operator runs against the hosted project, so it cannot
 # rot into passing on a schema that no longer matches the migrations.

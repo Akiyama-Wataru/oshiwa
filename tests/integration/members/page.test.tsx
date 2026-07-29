@@ -63,6 +63,7 @@ function createClient(options: {
   members?: unknown;
   membersError?: unknown;
   invitations?: unknown;
+  joinLinks?: unknown;
 } = {}) {
   const maybeSingle = vi.fn().mockResolvedValue({
     data:
@@ -98,6 +99,13 @@ function createClient(options: {
       .fn()
       .mockResolvedValue({ data: options.invitations ?? [], error: null }),
   };
+  const joinLinkQuery = {
+    select: vi.fn(() => joinLinkQuery),
+    eq: vi.fn(() => joinLinkQuery),
+    order: vi
+      .fn()
+      .mockResolvedValue({ data: options.joinLinks ?? [], error: null }),
+  };
 
   let membershipCalls = 0;
 
@@ -116,12 +124,17 @@ function createClient(options: {
           return invitationQuery;
         }
 
+        if (table === "group_join_links") {
+          return joinLinkQuery;
+        }
+
         membershipCalls += 1;
         // The first memberships read resolves the viewer, the second the list.
         return membershipCalls === 1 ? membershipQuery : rosterQuery;
       }),
     },
     invitationQuery,
+    joinLinkQuery,
   };
 }
 
@@ -260,6 +273,62 @@ describe("MembersPage", () => {
 
     expect(invitationQuery.select).not.toHaveBeenCalled();
     expect(screen.queryByText("返信待ちの招待")).toBeNull();
+  });
+
+  it("lets a manager hand out a one time link", async () => {
+    mocks.createServerSupabaseClient.mockResolvedValue(
+      createClient({
+        joinLinks: [
+          {
+            id: "3c4d5e6f-7a8b-4c9d-8e1f-2a3b4c5d6e7f",
+            role: "member",
+            expires_at: "2099-01-01T00:00:00+00:00",
+            revoked_at: null,
+            accepted_at: null,
+          },
+        ],
+      }).client,
+    );
+
+    await renderPage();
+
+    expect(screen.getByRole("button", { name: "リンクを作る" })).toBeVisible();
+    expect(
+      screen.getByRole("list", { name: "有効な参加リンク" }).children,
+    ).toHaveLength(1);
+  });
+
+  it("lists no link a newcomer could still walk through once it is spent", async () => {
+    mocks.createServerSupabaseClient.mockResolvedValue(
+      createClient({
+        joinLinks: [
+          {
+            id: "3c4d5e6f-7a8b-4c9d-8e1f-2a3b4c5d6e7f",
+            role: "member",
+            expires_at: "2099-01-01T00:00:00+00:00",
+            revoked_at: null,
+            accepted_at: "2026-07-29T00:00:00+00:00",
+          },
+        ],
+      }).client,
+    );
+
+    await renderPage();
+
+    expect(screen.getByText("使われていない参加リンクはありません。")).toBeVisible();
+  });
+
+  it("never reads or offers join links to a plain member", async () => {
+    const { client, joinLinkQuery } = createClient({
+      viewerRole: "member",
+      user: { id: memberId },
+    });
+    mocks.createServerSupabaseClient.mockResolvedValue(client);
+
+    await renderPage();
+
+    expect(joinLinkQuery.select).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: "リンクを作る" })).toBeNull();
   });
 
   it("says the roster is unavailable rather than that the group is empty", async () => {

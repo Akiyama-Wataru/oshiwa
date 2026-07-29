@@ -6,6 +6,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { AuthBrand } from "@/app/components/auth/AuthBrand";
 import { LogoutButton } from "@/app/components/auth/LogoutButton";
 import { InvitationRevokeForm } from "@/app/components/members/InvitationRevokeForm";
+import { JoinLinkList } from "@/app/components/members/JoinLinkList";
+import { JoinLinkPanel } from "@/app/components/members/JoinLinkPanel";
 import { LeaveGroupForm } from "@/app/components/members/LeaveGroupForm";
 import { MemberRoster } from "@/app/components/members/MemberRoster";
 import { logoutAction } from "@/app/groups/actions";
@@ -15,7 +17,15 @@ import {
   removeMemberAction,
   revokeInvitationAction,
 } from "@/app/groups/[groupId]/members/actions";
+import {
+  createJoinLinkAction,
+  revokeJoinLinkAction,
+} from "@/app/groups/[groupId]/members/join-links";
 import { SupabaseConfigurationError } from "@/lib/env";
+import {
+  type LiveJoinLink,
+  normalizeJoinLinkRows,
+} from "@/lib/members/join-links";
 import {
   type MembershipRole,
   type PendingInvitation,
@@ -40,6 +50,7 @@ type Roster = {
   role: MembershipRole;
   members: RosterMember[];
   invitations: PendingInvitation[];
+  joinLinks: LiveJoinLink[];
   canLeave: boolean;
   membersFailed: boolean;
 };
@@ -88,6 +99,21 @@ async function loadInvitations(
   return error ? [] : normalizeInvitationRows(data);
 }
 
+async function loadJoinLinks(
+  supabase: SupabaseClient,
+  groupId: string,
+): Promise<LiveJoinLink[]> {
+  // Row level security already limits this table to managers, so a plain
+  // member simply reads nothing rather than being refused.
+  const { data, error } = await supabase
+    .from("group_join_links")
+    .select("id, role, expires_at, revoked_at, accepted_at")
+    .eq("group_id", groupId)
+    .order("created_at", { ascending: false });
+
+  return error ? [] : normalizeJoinLinkRows(data);
+}
+
 async function loadRoster(
   supabase: SupabaseClient,
   groupId: string,
@@ -122,6 +148,7 @@ async function loadRoster(
       ...membership,
       members: [],
       invitations: [],
+      joinLinks: [],
       canLeave: false,
       membersFailed: true,
     };
@@ -139,6 +166,10 @@ async function loadRoster(
       membership.role === "member"
         ? []
         : await loadInvitations(supabase, groupId),
+    joinLinks:
+      membership.role === "member"
+        ? []
+        : await loadJoinLinks(supabase, groupId),
     // The last owner cannot leave, and the roster already worked that out.
     canLeave: members.some((entry) => entry.isSelf && entry.canRemove),
     membersFailed: false,
@@ -263,6 +294,20 @@ export default async function MembersPage({
             roleAction={changeMemberRoleAction}
           />
         )}
+
+        {roster.role !== "member" ? (
+          <>
+            <JoinLinkPanel
+              action={createJoinLinkAction}
+              groupId={parsedGroupId.data}
+            />
+            <JoinLinkList
+              action={revokeJoinLinkAction}
+              groupId={parsedGroupId.data}
+              links={roster.joinLinks}
+            />
+          </>
+        ) : null}
 
         {roster.role !== "member" ? (
           <section
