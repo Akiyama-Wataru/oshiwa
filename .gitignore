@@ -34,6 +34,11 @@ yarn-error.log*
 .env*
 !.env.example
 
+# Cloudflare local secrets. wrangler reads these from beside the config it is
+# given, so a real deploy key ends up here as well as in `wrangler secret put`.
+.dev.vars
+.dev.vars.*
+
 # vercel
 .vercel
 
