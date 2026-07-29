@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { UNSAFE_DISPLAY_CHARACTER_PATTERN } from "@/lib/validation/text";
+
 const passwordSchema = z
   .string()
   .min(12, "パスワードは12文字以上で入力してください。")
@@ -12,6 +14,26 @@ export const loginSchema = z.object({
     .toLowerCase()
     .pipe(z.email("有効なメールアドレスを入力してください。")),
   password: passwordSchema,
+});
+
+export const displayNameSchema = z
+  .string()
+  .trim()
+  .min(1, "表示名を入力してください。")
+  .max(40, "表示名は40文字以内で入力してください。")
+  .refine(
+    (value) => !UNSAFE_DISPLAY_CHARACTER_PATTERN.test(value),
+    "表示名に使用できない文字が含まれています。",
+  );
+
+export const signupSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .pipe(z.email("有効なメールアドレスを入力してください。")),
+  password: passwordSchema,
+  displayName: displayNameSchema,
 });
 
 export const setPasswordSchema = z.object({
@@ -36,4 +58,5 @@ export const inviteTokenSchema = z
   );
 
 export type LoginInput = z.infer<typeof loginSchema>;
+export type SignupInput = z.infer<typeof signupSchema>;
 export type SetPasswordInput = z.infer<typeof setPasswordSchema>;

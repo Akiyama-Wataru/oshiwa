@@ -115,6 +115,11 @@ psql "${psql_args[@]}" \
 psql "${psql_args[@]}" \
   -f "${repository_root}/supabase/tests/auth_groups_rls.sql"
 
+psql "${psql_args[@]}" \
+  -f "${repository_root}/supabase/migrations/20260729000100_group_join_links.sql"
+psql "${psql_args[@]}" \
+  -f "${repository_root}/supabase/tests/group_join_links.sql"
+
 concurrent_invite_token="$(
   psql "${psql_args[@]}" \
     -qAt \

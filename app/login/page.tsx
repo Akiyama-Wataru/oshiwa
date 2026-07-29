@@ -39,7 +39,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps = {}) {
             WELCOME BACK
           </p>
           <h1 id="login-title">ログイン</h1>
-          <p>招待されたメールアドレスでログインします。</p>
+          <p>メールアドレスとパスワードでログインします。</p>
         </div>
 
         {confirmationFailed ? (
@@ -51,8 +51,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps = {}) {
         <Link className="auth-text-link" href="/password/reset">
           パスワードをお忘れの方はこちら
         </Link>
+        <Link
+          className="auth-text-link"
+          href={`/signup?returnTo=${encodeURIComponent(returnTo)}`}
+        >
+          はじめての方はアカウントを作る
+        </Link>
         <Link className="auth-text-link" href="/join">
-          招待を受け取った方はこちら
+          メールで招待を受け取った方はこちら
         </Link>
       </section>
     </main>

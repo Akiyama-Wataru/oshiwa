@@ -2,21 +2,18 @@
 
 import { FormStatus } from "@/app/components/FormStatus";
 import { useActionFormState } from "@/app/components/useActionFormState";
-import type {
-  LoginAction,
-  LoginActionState,
-} from "@/app/login/actions";
+import type { SignupAction, SignupActionState } from "@/app/signup/actions";
 
-const initialState: LoginActionState = {
+const initialState: SignupActionState = {
   status: "idle",
   message: "",
 };
 
-export function LoginForm({
+export function SignupForm({
   action,
   returnTo,
 }: {
-  action: LoginAction;
+  action: SignupAction;
   returnTo: string;
 }) {
   const [state, formAction, isPending] = useActionFormState(
@@ -29,9 +26,21 @@ export function LoginForm({
       <form
         action={formAction}
         className="auth-form"
-        aria-describedby="login-help login-status"
+        aria-describedby="signup-help signup-status"
       >
         <input type="hidden" name="returnTo" value={returnTo} />
+        <label>
+          表示名
+          <input
+            type="text"
+            name="displayName"
+            autoComplete="nickname"
+            maxLength={40}
+            placeholder="輪のみんなに見える名前"
+            required
+            disabled={isPending}
+          />
+        </label>
         <label>
           メールアドレス
           <input
@@ -44,23 +53,21 @@ export function LoginForm({
             disabled={isPending}
           />
         </label>
-        {/* The browser silently refuses to submit a shorter password, so the
-            requirement has to be readable before the button is pressed. */}
         <div className="auth-field">
           <label>
             パスワード
             <input
               type="password"
               name="password"
-              autoComplete="current-password"
+              autoComplete="new-password"
               minLength={12}
               maxLength={128}
               required
               disabled={isPending}
-              aria-describedby="login-password-help"
+              aria-describedby="signup-password-help"
             />
           </label>
-          <p className="auth-field-help" id="login-password-help">
+          <p className="auth-field-help" id="signup-password-help">
             12文字以上で入力してください。
           </p>
         </div>
@@ -69,22 +76,23 @@ export function LoginForm({
           type="submit"
           disabled={isPending}
         >
-          {isPending ? "ログイン中" : "ログインする"}
+          {isPending ? "登録中" : "登録する"}
         </button>
       </form>
 
-      <p className="auth-helper" id="login-help">
-        アカウントは誰でも作れます。輪に入るには参加リンクが必要です。
+      <p className="auth-helper" id="signup-help">
+        登録しただけでは、どの輪も見えません。参加リンクを受け取ると輪に入れます。
       </p>
       <FormStatus
         className="auth-status"
-        id="login-status"
+        id="signup-status"
         message={
           isPending
-            ? "ログインしています…"
-            : state.message || "招待されたメールアドレスでログインしてください。"
+            ? "登録しています…"
+            : state.message ||
+              "メールアドレスとパスワードで登録できます。"
         }
-        status={state.status}
+        status={state.status === "error" ? "error" : "idle"}
       />
     </>
   );

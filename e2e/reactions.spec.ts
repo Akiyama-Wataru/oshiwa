@@ -79,3 +79,35 @@ test("お知らせから戻されたログイン画面に深刻なアクセシ�
 
   expect(results.violations).toEqual([]);
 });
+
+test("参加リンクの画面は、輪の名前を明かさずにログインへ導く", async ({ page }) => {
+  const token = "c".repeat(64);
+  const invitePath = `/invite/${token}`;
+
+  await page.goto(invitePath);
+
+  // Whoever holds the URL has not been let in yet, so the page may not say
+  // which circle it belongs to.
+  await expect(
+    page.getByRole("heading", { level: 1, name: "参加リンクを受け取りました" }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "ログインして参加" })).toHaveAttribute(
+    "href",
+    `/login?returnTo=${encodeURIComponent(invitePath)}`,
+  );
+});
+
+test("登録画面がロボットに拾われず、アクセシビリティ違反もない", async ({ page }) => {
+  await page.goto("/signup");
+
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+    "content",
+    /noindex/i,
+  );
+
+  const results = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+    .analyze();
+
+  expect(results.violations).toEqual([]);
+});

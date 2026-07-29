@@ -24,11 +24,24 @@ export const createInvitationSchema = z.object({
   role: membershipRoleSchema,
 });
 
+function readOrigin(value: string): URL | null {
+  // Refinements still run after `url()` has already rejected a value, so this
+  // has to answer rather than throw: an unset NEXT_PUBLIC_SITE_URL would
+  // otherwise crash the caller instead of failing validation.
+  try {
+    return new URL(value);
+  } catch {
+    return null;
+  }
+}
+
 export const siteUrlSchema = z
   .url("有効なサイトURLを設定してください。")
   .refine((value) => {
-    const url = new URL(value);
+    const url = readOrigin(value);
+
     return (
+      url !== null &&
       (url.protocol === "https:" || url.protocol === "http:") &&
       url.username === "" &&
       url.password === "" &&
@@ -44,7 +57,7 @@ export function siteUrlSchemaForMode(
 ) {
   return siteUrlSchema.refine(
     (origin) =>
-      mode !== "production" || new URL(origin).protocol === "https:",
+      mode !== "production" || readOrigin(origin)?.protocol === "https:",
     "本番環境のサイトURLにはHTTPSが必要です。",
   );
 }
