@@ -38,6 +38,8 @@ function normalizeMemberships(value: unknown): GroupMembership[] {
     return [];
   }
 
+  const seen = new Set<string>();
+
   return value.flatMap((row) => {
     if (!row || typeof row !== "object") {
       return [];
@@ -62,6 +64,14 @@ function normalizeMemberships(value: unknown): GroupMembership[] {
     ) {
       return [];
     }
+
+    // One card per circle even if the rows ever arrive unfiltered again: a
+    // duplicate here is indistinguishable from two circles sharing a name.
+    if (seen.has(group.id)) {
+      return [];
+    }
+
+    seen.add(group.id);
 
     return [
       {
@@ -94,9 +104,14 @@ export default async function GroupsPage({
       redirect("/login?returnTo=%2Fgroups");
     }
 
+    // Only the reader's own rows. Row level security lets a member read every
+    // membership row of a circle they belong to, which is what the roster page
+    // needs; here it would draw one card per member of the circle and put
+    // somebody else's role on the reader's badge.
     const { data, error } = await supabase
       .from("memberships")
-      .select("group_id, role, groups(id, name)");
+      .select("group_id, role, groups(id, name)")
+      .eq("user_id", user.id);
 
     if (error) {
       membershipLoadFailed = true;
