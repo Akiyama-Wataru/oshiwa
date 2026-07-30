@@ -15,6 +15,9 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 function clientWithMemberships(memberships: unknown, unread: unknown = 0) {
+  const eq = vi.fn().mockResolvedValue({ data: memberships, error: null });
+  const select = vi.fn(() => ({ eq }));
+
   return {
     auth: {
       getUser: vi.fn().mockResolvedValue({
@@ -28,10 +31,10 @@ function clientWithMemberships(memberships: unknown, unread: unknown = 0) {
         error: null,
       }),
     },
-    from: vi.fn(() => ({
-      select: vi.fn().mockResolvedValue({ data: memberships, error: null }),
-    })),
+    from: vi.fn(() => ({ select })),
     rpc: vi.fn().mockResolvedValue({ data: unread, error: null }),
+    membershipSelect: select,
+    membershipEq: eq,
   };
 }
 
@@ -114,6 +117,37 @@ describe("GroupsPage", () => {
     expect(screen.getByRole("button", { name: "グループを作る" })).toBeEnabled();
   });
 
+  it("lists a circle once, with the reader's own role", async () => {
+    const groupId = "07b0274c-8074-4052-bf5f-ee717090c31b";
+    // Row level security lets a member read every membership row of a circle
+    // they belong to, so this query answers with the whole roster. Without a
+    // filter the page drew one card per member and put somebody else's role on
+    // the reader's own badge.
+    const client = clientWithMemberships([
+      {
+        group_id: groupId,
+        role: "member",
+        groups: { id: groupId, name: "306LN SST" },
+      },
+      {
+        group_id: groupId,
+        role: "owner",
+        groups: { id: groupId, name: "306LN SST" },
+      },
+    ]);
+    mocks.createServerSupabaseClient.mockResolvedValue(client);
+    const { default: GroupsPage } = await import("@/app/groups/page");
+
+    render(await GroupsPage());
+
+    expect(client.membershipEq).toHaveBeenCalledWith("user_id", "user-1");
+    expect(screen.getAllByText("306LN SST")).toHaveLength(1);
+    expect(screen.queryByText("オーナー")).toBeNull();
+    expect(
+      screen.getByText("メンバー", { selector: ".role-badge" }),
+    ).toBeVisible();
+  });
+
   it("says how many notifications are waiting, and links to them", async () => {
     mocks.createServerSupabaseClient.mockResolvedValue(
       clientWithMemberships([], 4),
@@ -185,10 +219,12 @@ describe("GroupsPage", () => {
         }),
       },
       from: vi.fn(() => ({
-        select: vi.fn().mockResolvedValue({
-          data: null,
-          error: new Error("private query detail"),
-        }),
+        select: vi.fn(() => ({
+          eq: vi.fn().mockResolvedValue({
+            data: null,
+            error: new Error("private query detail"),
+          }),
+        })),
       })),
       rpc: vi.fn().mockResolvedValue({ data: 0, error: null }),
     });
